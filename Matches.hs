@@ -20,6 +20,9 @@ matches (Literal ch) st = (st == [ch])
 matches (Or r1 r2) st
   = matches r1 st || matches r2 st
 
+matches (And r1 r2) st
+  = matches r1 st && matches r2 st
+
 matches (Then r1 r2) st
   = or [ matches r1 s1 && matches r2 s2 | (s1,s2) <- splits st ]
 

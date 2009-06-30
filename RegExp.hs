@@ -14,6 +14,7 @@ module RegExp where
 data Reg = Epsilon |
 	   Literal Char |
 	   Or Reg Reg |
+	   And Reg Reg |
 	   Then Reg Reg |
 	   Star Reg
            deriving Eq
@@ -80,5 +81,6 @@ printRE :: Reg -> [Char]
 printRE Epsilon = "@"
 printRE (Literal ch) = [ch]
 printRE (Or r1 r2) = "(" ++ printRE r1 ++ "|" ++ printRE r2 ++ ")"
+printRE (And r1 r2) = "(" ++ printRE r1 ++ "&" ++ printRE r2 ++ ")"
 printRE (Then r1 r2) = "(" ++ printRE r1 ++ printRE r2 ++ ")"
 printRE (Star r) = "(" ++ printRE r ++")*"
