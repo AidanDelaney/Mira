@@ -1,0 +1,1320 @@
+%\documentstyle[twocolumn]{article}
+%\documentstyle[12pt,times]{article}
+\documentclass[11pt]{article}
+\usepackage{sjtFonts}
+\usepackage{epsfig}
+\usepackage{alltt}
+
+\def\l@section{\@dottedtocline{3}{0em}{1.4em}}
+
+
+\begin{document}
+%\input{defs0.tex}
+\input{defs1.tex} %\input{psfig.tex}
+%\newcommand{\mira}{\noindent\so}
+%\newcommand{\arim}{\bl\st\bl\\\noindent}
+\newcommand{\bs}{$\tt\backslash\!\!$}
+\newcommand{\lbs}{\mbox{\verb+\+}}
+\newcommand{\ignore}[1]{}
+\newcommand{\bl}{\mbox{\ }}
+\newcommand{\gi}{\mbox{$\tt g_i$}}
+\newcommand{\ei}{\mbox{$\tt e_i$}}
+\newcommand{\aone}{\mbox{$\tt a_1$}}
+\newcommand{\atwo}{\mbox{$\tt a_2$}}
+\newcommand{\ak}{\mbox{$\tt a_k$}}
+\newcommand{\pone}{\mbox{$\tt p_1$}}
+\newcommand{\ptwo}{\mbox{$\tt p_2$}}
+\newcommand{\pk}{\mbox{$\tt p_k$}}
+\newcommand{\eone}{\mbox{$\tt e_1$}}
+\newcommand{\etwo}{\mbox{$\tt e_2$}}
+\newcommand{\er}{\mbox{$\tt e_r$}}
+\newcommand{\gone}{\mbox{$\tt g_1$}}
+\newcommand{\gtwo}{\mbox{$\tt g_2$}}
+\newcommand{\gr}{\mbox{$\tt g_r$}}
+\newcommand{\qone}{\mbox{$\tt q_1$}}
+\newcommand{\qtwo}{\mbox{$\tt q_2$}}
+\newcommand{\qk}{\mbox{$\tt q_k$}}
+\newcommand{\fone}{\mbox{$\tt f_1$}}
+\newcommand{\fl}{\mbox{$\tt f_l$}}
+\newcommand{\hone}{\mbox{$\tt h_1$}}
+\newcommand{\hl}{\mbox{$\tt h_l$}}
+\newcommand{\vone}{\mbox{$\tt v_1$}}
+\newcommand{\aoneone}{\mbox{$\tt a_{1,1}$}}
+\newcommand{\stone}{\mbox{$\tt st_1$}}
+\newcommand{\sttwo}{\mbox{$\tt st_2$}}
+\newcommand{\stn}{\mbox{$\tt st_n$}}
+\newcommand{\rone}{\mbox{$\tt r_1$}}
+\newcommand{\rtwo}{\mbox{$\tt r_2$}}
+\newcommand{\rthree}{\mbox{$\tt r_3$}}
+\newcommand{\beware}[1]
+ {\medskip\noindent\framebox{\parbox{\textwidth}{$\cal N.B.$
+    #1}}\medskip\noindent}
+%\newcommand{\twid}{\mbox{\LARGE\raisebox{-9pt}{$\:\tilde{}$}}}
+\newcommand{\eps}{$\varepsilon$}
+\newcommand{\trans}[1]{\stackrel{\mbox{\tt #1}}{\longrightarrow}}
+
+%       \font\hv=Helvetica
+%       \font\mhv=Helvetica at 14pt
+%       \font\lhv=Helvetica at 18pt
+%       \font\hhv=Helvetica at 24pt
+
+
+%       \ignore{
+
+\title{Regular Expressions and Automata\\
+using Haskell}
+\author{Simon Thompson\\
+Computing Laboratory\\
+University of Kent at Canterbury}
+\date{January 2000}
+\maketitle
+%\rhead{\thepage}
+
+\ignore{
+\begin{figure}[b]
+\footnoterule
+\copyright\ Simon Thompson, 2000
+\end{figure}
+}
+
+\tableofcontents
+
+%\pagebreak
+
+\section{Introduction}
+In these notes Haskell is used as a vehicle to introduce regular expressions,
+pattern matching, and their implementations by means of non-deterministic and
+deterministic automata.
+
+As part of the material, we give an implementation of the ideas, contained in
+a set
+of files. References to this material are scattered through the text. The
+files can be obtained by following the instructions in
+\begin{alltt}
+http://www.cs.ukc.ac.uk/people/staff/sjt/Further/regExp.html
+\end{alltt}
+
+\medskip
+\noindent
+This material is based on the treatment of the subject in [Aho {\em et.\
+al.}], but provides full implementations rather than their pseudo-code
+versions of the algorithms. 
+
+The material gives an illustration of many of the features of Haskell,
+including polymorphism (the states of an NFA can be represented by objects
+of any type); type classes (in practice the states need to have equality and
+an ordering defined on them); modularisation (the system is split across a number of
+modules); higher-order functions (used in finding limits of processes, for
+example) and other features. A tutorial introduction to Haskell can be found
+in [Thompson].
+
+The paper begins with definitions of regular expressions, and how strings are
+matched to them; this also gives our first Haskell treatment also. After
+describing the abstract data type of sets we define non-deterministic finite
+automata, and their implementation in Haskell. We then show how to build an
+NFA corresponding to each regular expression, and how such a machine can be
+optimised, first by transforming it into a deterministic machine, and then by
+minimising the state space of the DFA. We conclude with a discussion of
+regular definitions, and show how recognisers for strings matching regular
+definitions can be built.
+
+\section{Regular Expressions}
+
+Regular expressions are patterns which can be used to describe sets of strings
+of characters of various kinds, such as 
+\begin{itemize}
+\item the identifiers of a programming language
+-- strings of alphanumeric characters
+which begin with an alphabetic character;
+\item the numbers -- integer or real -- given in a programming language; and
+so on.
+\end{itemize}
+There are five sorts of pattern, or regular expression:
+
+\bigskip
+\noindent
+\begin{tabular}{ll}
+\eps & This is the Greek character {\em epsilon}, which matches the
+empty string.\\
+\tt x & {\tt x} is any character. This matches the character itself.\\
+\tt (\rone|\rtwo) & \rone\ and \rtwo\ are regular expressions.\\
+\tt (\rone\rtwo) & \rone\ and \rtwo\ are regular expressions.\\
+\tt (r)* & {\tt r} is a regular expression.
+\end{tabular}
+
+\bigskip
+\noindent
+Examples of regular expressions include {\tt (a|(ba))},
+{\tt ((ba)|(\eps|(a)*))} and {\tt hello}.
+
+In order to give a more readable 
+version of these, it is assumed that {\tt *} binds more tightly than
+juxtaposition ({\em i.e.} {\tt (\rone\rtwo)}), and that juxtaposition binds
+more tightly than {\tt (\rone|\rtwo)}. This means that {\tt \rone\rtwo*} will
+mean {\tt (\rone(\rtwo)*)}, {\em not} {\tt ((\rone\rtwo))*}, and that
+{\tt \rone|\rtwo\rthree} will mean {\tt \rone|(\rtwo\rthree)}, {\em not} 
+{\tt (\rone|\rtwo)\rthree}.
+
+A Haskell algebraic type
+representing regular expressions is given by
+\begin{alltt}
+data Reg = Epsilon |
+           Literal Char |
+           Or Reg Reg |
+           Then Reg Reg |
+           Star Reg
+           deriving Eq
+\end{alltt}
+The statement \texttt{deriving Eq} at the end of the definition ensures that the 
+type \texttt{Reg} is made to belong to the type class \texttt{Eq}; in other words
+the equality function \texttt{==} is defined over \texttt{Reg}.
+
+This definition and those which follow can be found in the file {\tt
+RegExp.hs}; this file contains the module \texttt{RegExp}, which will be included in
+other modules in the system.
+The Haskell representations of {\tt (a|(ab))} and {\tt ((ba)|(\eps|(a)*))}
+are
+\begin{alltt}
+Or (Literal 'a') (Then (Literal 'a') (Literal 'b'))
+Or (Then (Literal 'b') (Literal 'a'))
+   (Or Epsilon (Star (Literal 'a')))
+\end{alltt}
+respectively. In order to shorten these definitions we will usually define
+constant literals such as
+\begin{alltt}
+a = Literal 'a'
+b = Literal 'b'
+\end{alltt}
+so that the expressions above become
+\begin{alltt}
+Or a (Then a b)        Or (Then b a) (Or Epsilon (Star a))
+\end{alltt}
+If we use the infix forms of {\tt Or} and {\tt Then},
+{\tt `Or`} and {\tt `Then`}, they read
+\begin{alltt}
+a `Or` (a `Then` b)    (a `Then` b) `Or` (Epsilon `Or` (Star a))
+\end{alltt}
+Functions over the type of regular expressions are defined by recursion over
+the structure of the expression. Examples include
+\begin{alltt}
+literals :: Reg -> [Char]
+\bl
+literals Epsilon      = []
+literals (Literal ch) = [ch]
+literals (Or r1 r2)   = literals r1 ++ literals r2
+literals (Then r1 r2) = literals r1 ++ literals r2
+literals (Star r)     = literals r
+\end{alltt}
+which prints a list of the literals appearing in a regular expression, and
+\begin{alltt}
+printRE :: Reg -> [Char]
+\bl
+printRE Epsilon      = "@"
+printRE (Literal ch) = [ch]
+printRE (Or r1 r2)
+  = "(" ++ printRE r1 ++ "|" ++ printRE r2 ++ ")"
+printRE (Then r1 r2)
+  = "(" ++ printRE r1 ++ printRE r2 ++ ")"
+printRE (Star r) = "(" ++ printRE r ++")*"
+\end{alltt}
+which gives a printable form of a regular expression. Note that {\tt '@'} is
+used to represent epsilon in ASCII.
+The type \texttt{Reg} can be made to belong to the \texttt{Show} class thus:
+\begin{alltt}
+instance Show Reg where
+  show = printRE
+\end{alltt}
+or indeed an instance could be derived automatically (like \texttt{Eq} earlier).
+
+\medskip
+\noindent
+{\bf Exercises}
+
+\medskip
+\noindent
+1. Write a more readable form of the expression {\tt
+((((a|b)|c)((a)*|(b)*))(c|d))}.
+
+\medskip
+\noindent
+2. What is the unabbreviated form of {\tt ((x?)*(y?)*)+}?
+
+\section{Matching regular expressions}
+
+Regular expressions are patterns. We should ask which strings match each
+regular expression.
+
+\bigskip
+\noindent
+\begin{tabular}{lp{4in}}
+\eps & The empty string matches epsilon.\\ \ \\
+\tt x & The character {\tt x} matches the pattern {\tt x},
+for any character {\tt x}. \\ \ \\
+\tt (\rone|\rtwo) & The string {\tt st} will match {\tt (\rone|\rtwo)}
+if {\tt st}  matches either \rone\ or
+\rtwo\ (or both).\\ \ \\
+\tt (\rone\rtwo) & The string {\tt st} will match {\tt (\rone\rtwo)}
+if {\tt st} can be
+split into two substrings \stone\ and \sttwo, {\tt st = \stone++\sttwo}, so
+that \stone\ matches \rone\ and \sttwo\ matches \rtwo.\\ \ \\
+\tt (r)* & The string {\tt st} will match  {\tt (r)*}
+if {\tt st} can be split into 
+zero or more substrings, {\tt st = \stone++\sttwo++...++\stn}, each of which
+matches {\tt r}. The zero case implies that the empty string will match
+{\tt (r)*} for {\em any\/} regular expression {\tt r}.
+\end{tabular}
+
+\bigskip
+\noindent
+This can be implemented in Haskell, in the module {\tt Matches}.
+The first three cases are a simple transliteration of the definitions above.
+\begin{alltt}
+matches :: Reg -> String -> Bool
+
+matches Epsilon st      = (st == "")
+matches (Literal ch) st = (st == [ch])
+matches (Or r1 r2) st
+  = matches r1 st || matches r2 st
+\end{alltt}
+In the case of juxtaposition, we need an auxiliary function which gives the
+list containing all the possible ways of splitting up a list.
+\begin{alltt}
+splits :: [a] -> [ ([a],[a]) ]
+
+splits st = [ splitAt n st | n <- [0 .. length st] ]
+\end{alltt}
+For example,
+{\tt splits [2,3]} is {\tt [([],[2,3]),([2],[3]),([2,3],[])]}.
+A string will match {\tt (Then r1 r2)} if at least one of the splits gives
+strings which match {\tt r1} and {\tt r2}.
+
+\begin{alltt}
+matches (Then r1 r2) st
+  = or [matches r1 s1 \&\& matches r2 s2 | (s1,s2)<-splits st]
+\end{alltt}
+The final case is that of {\tt Star}. We can explain {\tt a*} as either
+\eps\ or as {\tt a} followed by {\tt a*}. We can use this to implement the
+check for the match, but it is problematic when {\tt a} can be
+matched by \eps. When this happens, the match is tested recursively on the
+same string, giving an infinite loop. This is avoided by disallowing an
+epsilon match on {\tt a} -- the first match on {\tt a} has to be non-trivial.
+
+\begin{alltt}
+matches (Star r) st
+  = matches Epsilon st ||
+      or [ matches r s1 \&\& matches (Star r) s2 |
+                     (s1,s2) <- frontSplits st ]
+\end{alltt}
+{\tt frontSplits} is defined like {\tt splits} but
+so as to exclude the split {\tt ([],st)}.
+
+\medskip
+\noindent
+{\bf Exercises}
+
+\medskip
+\noindent
+3. Argue that the string \eps\ matches {\tt (a|(bc)*)*} and that the string
+{\tt abba}
+matches {\tt a((b|a)*(ba)*)}.
+
+\medskip
+\noindent
+4. Why does the string {\tt bab} not match {\tt a((b|a)*(ba)*)}?
+
+\medskip
+\noindent
+5. Give informal descriptions of the sets of strings matching the following
+regular expressions.
+\begin{center}
+{\tt (a|b)*a(a|b)*a(a|b)\ \ \ \ (a|b)*a(a|b)(a|b)\ \ \ \ \eps|a|b|ba|b?(ab)+a?}
+\end{center}
+
+\medskip
+\noindent
+6. Give regular expressions describing the following sets of strings
+\begin{itemize}
+\item All strings of {\tt a}s and {\tt b}s containing at most two {\tt a}s.
+\item All strings of {\tt a}s and {\tt b}s containing exactly two {\tt a}s.
+\item All strings of {\tt a}s and {\tt b}s of length at most three.
+\item All strings of {\tt a}s and {\tt b}s which contain no repeated adjacent
+characters, that is no substring of the form {\tt a{}a} or {\tt b{}b}.
+\end{itemize}
+
+\section{Sets}
+
+A set is a collection of
+elements of a particular type, which is both like and unlike a list. Lists are
+familiar from Haskell, and examples include
+
+\begin{alltt}
+[Joe,Sue,Ben]     [Ben,Sue,Joe]
+[Joe,Sue,Sue,Ben] [Joe,Sue,Ben,Sue]
+\end{alltt}
+Each of these lists is different -- not only do the elements of a list matter,
+but also the {\em order\/} in which they occur, and their {\em multiplicity\/} 
+(the number of times each element occurs).
+
+In many situations, order and multiplicity are irrelevant. If we want to talk
+about the collection of people coming to our birthday party, we just want the
+names -- we cannot invite someone more than once, so multiplicity is not
+important; the order we might list them in is also of no interest. In other
+words, all we want to know is the {\em set\/} of people coming. In the example
+above, this is the set containing {\tt Joe}, {\tt Sue} and {\tt Ben}.
+
+
+Sets can be implemented in a number of ways in Haskell, and the precise form
+is not important for the user. It is sensible to declare the type as an
+abstract data type, so that its implementation is hidden from the user. This
+is done by failing to export the constructor of the type which implements sets.
+Details of this mechanism are given in Chapter 16 of [Thompson], which also discusses
+the particular implementation given here in rather more detail. The definition is given 
+in the module \texttt{Sets} which is defined in the file \texttt{Sets.hs}.
+The heading of the module is illustrated in 
+Figure \ref{setAbs}.
+\begin{figure}
+\begin{alltt}
+module Sets ( Set ,
+  empty              , -- Set a
+  sing               , -- a -> Set a
+  memSet             , -- Ord a => Set a -> a -> Bool
+  union,inter,diff   , -- Ord a => Set a -> Set a -> Set a
+  eqSet              , -- Eq a  => Set a -> Set a -> Bool
+  subSet             , -- Ord a => Set a -> Set a -> Bool
+  makeSet            , -- Ord a => [a] -> Set a
+  mapSet             , -- Ord b => (a -> b) -> Set a -> Set b
+  filterSet          , -- (a -> Bool) -> Set a -> Set a
+  foldSet            , -- (a -> a -> a) -> a -> Set a -> a
+  showSet            , -- Show a => Set a -> String
+  card               , -- Set a -> Int
+  flatten            , -- Set a -> [a]
+  setlimit             -- Eq a => (Set a -> Set a) -> Set a -> Set a
+  ) where
+
+import List hiding ( union )
+\end{alltt}
+\caption{The functions in the set abstract data type}
+\label{setAbs}
+\end{figure}
+
+
+The implementation we have given represents a set as an {\em ordered list of
+elements without repetitions}, wrapped up by the constructor \texttt{SetI}.
+For instance, the set of birthday party attendees will be given by
+\begin{alltt}
+SetI [Ben,Joe,Sue]
+\end{alltt}
+The implementation of the type \texttt{Set} is hidden because the \texttt{SetI}
+constructor for this type is not exported from the module.
+
+Since the lists are ordered we expect to have an 
+ordering over the type of set elements; it is this requirement that gives rise to
+the constraint \texttt{Ord a} in many of the set-manipulating functions.
+The individual functions are described and
+implemented as follows.
+
+\medskip
+\noindent
+The {\tt empty} set is the empty list
+\begin{alltt}
+empty = SetI []
+\end{alltt}
+and {\tt sing a} is the singleton set, consisting of the single element {\tt a}
+\begin{alltt}
+sing x = SetI [x]
+\end{alltt}
+Figure \ref{setOps} defines the functions
+{\tt union,inter,diff} which give the union, intersection and difference of two
+sets. The union consists of the elements occurring in either set (or both), the
+intersection of those elements in both sets and the difference of those
+elements in the first but not the second set. (Note also that \texttt{union} here is a redefinition of the 
+function with the same name from the \texttt{Prelude.hs}.) 
+
+\begin{figure}
+\begin{alltt}
+union :: Ord a => Set a -> Set a -> Set a
+union (SetI xs) (SetI ys) = SetI (uni xs ys)
+
+uni :: Ord a => [a] -> [a] -> [a]
+uni [] ys        = ys
+uni xs []        = xs
+uni (x:xs) (y:ys) 
+  | x<y         = x : uni xs (y:ys)
+  | x==y        = x : uni xs ys
+  | otherwise   = y : uni (x:xs) ys
+
+inter :: Ord a => Set a -> Set a -> Set a
+inter (SetI xs) (SetI ys) = SetI (int xs ys)
+
+int :: Ord a => [a] -> [a] -> [a]
+int [] ys       = []
+int xs []       = []
+int (x:xs) (y:ys) 
+  | x<y         = int xs (y:ys)
+  | x==y        = x : int xs ys
+  | otherwise   = int (x:xs) ys
+
+diff :: Ord a => Set a -> Set a -> Set a
+diff (SetI xs) (SetI ys) = SetI (dif xs ys)
+
+dif :: Ord a => [a] -> [a] -> [a]
+dif [] ys       = []
+dif xs []       = xs
+dif (x:xs) (y:ys)  
+  | x<y         = x : dif xs (y:ys)
+  | x==y        = dif xs ys
+  | otherwise   = dif (x:xs) ys
+\end{alltt}
+\caption{Set operations}
+\label{setOps}
+\end{figure}
+
+These definitions 
+each follow the same pattern: a function like \texttt{uni} implements
+the operation over lists, and the top-level \texttt{union} function
+lifts this to operate over the lists `wrapped' by the constructor
+\texttt{SetI}.
+
+The operation {\tt memSet xs x} tests whether {\tt x} is a member of the set {\tt xs}.
+Note that this is an optimisation of the function {\tt elem} over lists;
+since the list is ordered, we need look no further once we have found an
+element greater than the one we seek.
+\begin{alltt}
+memSet :: Ord a => Set a -> a -> Bool
+
+memSet (SetI []) y   = False
+memSet (SetI (x:xs)) y 
+  | x<y	        = memSet (SetI xs) y
+  | x==y        = True
+  | otherwise   = False
+\end{alltt}
+{\tt subSet xs ys} tests whether {\tt xs} is a subset of {\tt ys}; that is whether
+every element of {\tt xs} is an element of {\tt ys}.
+\begin{alltt}
+subSet :: Ord a => Set a -> Set a -> Bool
+subSet (SetI xs) (SetI ys) = subS xs ys
+
+subS :: Ord a => [a] -> [a] -> Bool
+subS [] ys      = True
+subS xs []      = False
+subS (x:xs) (y:ys) 
+  | x<y         = False
+  | x==y        = subS xs ys
+  | x>y         = subS (x:xs) ys
+\end{alltt}
+{\tt eqSet x y} tests whether two sets are equal.
+\begin{alltt}
+eqSet (SetI xs) (SetI ys) = (xs == ys)
+\end{alltt}
+and an instance declaration for \texttt{Eq} over \texttt{Set} makes \texttt{eqSet} into
+\texttt{==} over \texttt{Set}.
+
+The functions {\tt mapSet}, {\tt filterSet} and {\tt foldSet}
+behave like {\tt map}, {\tt filter} and {\tt foldr}
+except that they operate over sets. {\tt separate} is a synonym for {\tt
+filterSet}. 
+\begin{alltt}
+mapSet :: Ord b => (a -> b) -> Set a -> Set b
+mapSet f (SetI xs) = makeSet (map f xs)
+
+filterSet :: (a -> Bool) -> Set a -> Set a
+filterSet p (SetI xs) = SetI (filter p xs)
+
+foldSet :: (a -> a -> a) -> a -> Set a -> a
+foldSet f x (SetI xs)  = (foldr f x xs)
+\end{alltt}
+The operation {\tt makeSet} turns a list into a set
+\begin{alltt}
+makeSet :: Ord a => [a] -> Set a
+makeSet = SetI . remDups . sort
+          where
+          remDups []      = []
+          remDups [x]     = [x]
+          remDups (x:y:xs) 
+            | x < y       = x : remDups (y:xs)
+            | otherwise   = remDups (y:xs)
+\end{alltt}
+{\tt showSet f} gives a printable version of a set, one item per line,
+using the function {\tt f} to give a printable version of each element.
+\begin{alltt}
+showSet :: Show a => Set a -> String
+showSet (SetI xs) = concat (map ((++"\verb+\+n") . show) xs)
+\end{alltt}
+{\tt card} gives the number of elements in a set,
+\begin{alltt}
+card :: Set a -> Int
+card (SetI xs) = length xs
+\end{alltt}
+{\tt flatten} turns a set into an ordered list of the elements of
+the set
+\begin{alltt}
+flatten :: Set a -> [a]
+flatten (SetI xs) = xs
+\end{alltt}
+Obviously this breaks the abstraction 
+barrier, but it is necessary in some
+situations to do this.
+
+The function {\tt setlimit f x} gives the `limit' of the sequence
+\begin{center}
+{\tt x , f x , f (f x) , f (f (f x)) , ...}
+\end{center}
+that is the first element in the sequence whose successor is equal, as a set,
+to the element itself. In other words, keep applying {\tt f} until a fixed
+point or limit is reached.
+\begin{alltt}
+setlimit :: Eq a => (Set a -> Set a) -> Set a -> Set a
+setlimit f s
+  | s==next      = s
+  | otherwise    = setlimit f next
+    where
+    next = f s
+\end{alltt}
+
+\medskip
+\noindent
+{\bf Exercises}
+
+\medskip
+\noindent
+7. Define the
+function {\tt powerSet :: ... => Set a -> Set (Set a)} which returns the set of all
+subsets of a set. What context information is required on the type
+\texttt{a}?
+
+\medskip
+\noindent
+8. How would you define the
+functions 
+
+\begin{alltt}
+setUnion :: ... => Set (Set a) -> Set a
+setInter :: ... => Set (Set a) -> Set a
+\end{alltt}
+which return the union and intersection
+of a set of sets? What contexts are required on the types? 
+
+\medskip
+\noindent
+9. Can infinite sets (of numbers, for instance) be adequately
+represented by ordered lists? Can you tell if two infinite lists are equal,
+for instance?
+
+\medskip
+\noindent
+10. The abstract data type {\tt Set a} can be represented in a number of different ways.
+Alternatives include: arbitrary lists (rather than ordered lists without
+repetitions), and boolean valued functions, that is elements of the type {\tt
+a -> Bool}. Give implementations of the type using these two representations.
+
+\section{Non-deterministic Finite Automata}
+
+A Non-deterministic Finite Automaton or NFA
+is a simple machine which can be used to
+recognise regular expressions. It consists of four components
+\begin{itemize}
+\item A finite set of states, $S$.
+\item A finite set of moves.
+\item A start state (in $S$).
+\item A set of terminal or final states (a subset of $S$).
+\end{itemize}
+In the Haskell module \texttt{NfaTypes} this is written
+\begin{alltt}
+data Nfa a = NFA (Set a) 
+                 (Set (Move a)) 
+                 a 
+                 (Set a)
+             deriving (Eq,Show)
+\end{alltt}
+This has been represented by an algebraic type rather than a 4-tuple simply
+for readability. The type of states can be different in different
+applications, and indeed in the following we use both numbers and sets of
+numbers as states.
+
+A move is between two states, and is either given by a character, or an \eps.
+\begin{alltt}
+data Move a = Move a Char a | 
+              Emove a a
+              deriving (Eq,Ord,Show)
+\end{alltt}
+The first example of an NFA, called {\tt M}, follows.
+
+\noindent
+\begin{center}\ \epsfig{figure=pic1.ps} \end{center}
+The states are {\tt 0,1,2,3}, with the start state {\tt 0} indicated by an
+incoming arrow, and the final states indicated by shaded circles. In
+this case there is a single final state, {\tt 3}. The moves are indicated by
+the arrows, marked with characters {\tt a} and {\tt b} in this case. From
+state {\tt 0} there are two possible moves on symbol {\tt a}, to {\tt 1} and
+to remain at {\tt 0}. This is one source of the non-determinism in the
+machine.
+
+The Haskell representation of the machine is 
+\begin{alltt}
+NFA
+(makeSet [0 .. 3])
+(makeSet [ Move 0 'a' 0 ,
+           Move 0 'a' 1 ,
+           Move 0 'b' 0 ,
+           Move 1 'b' 2 ,
+           Move 2 'b' 3 ])
+0
+(sing 3)
+\end{alltt}
+\noindent
+A second example, called {\tt N}, is illustrated below.
+
+\noindent
+\begin{center}\ \epsfig{figure=pic2.ps} \end{center}
+The Haskell representation of this machine is
+
+\begin{alltt}
+NFA
+(makeSet [0 .. 5])
+(makeSet [ Move 0 'a' 1,
+           Move 1 'b' 2,
+           Move 0 'a' 3,
+           Move 3 'b' 4,
+           Emove 3 4,
+           Move 4 'b' 5 ])
+0
+(makeSet [2,5])
+\end{alltt}
+This machine contains two kinds of non-determinism. The first is at state {\tt
+0}, from which it is possible to move to either {\tt 1} or {\tt 3} on reading
+{\tt a}. The second occurs at state {\tt 3}: it is possible to move
+`invisibly' from state {\tt 3} to state {\tt 4} on the epsilon move, {\tt
+Emove 3 4}.
+
+The Haskell code for these machines together with a function {\tt print\_nfa}
+to print an nfa whose states are numbered can be found in the module {\tt
+NfaMisc}.
+
+How do these machines recognise strings? A move can be made from one state
+{\tt s} to another {\tt t} either
+if the machine contains {\tt Emove s t} or if the
+next symbol to be read is, say, {\tt a} and the machine contains a move {\tt
+Move s a t}.
+A string will be {\em accepted\/} by a machine if there is a sequence of moves
+through states of the machine starting at the start state and terminating at
+one of the terminal states -- this is called an {\em accepting path}.
+For instance, the path
+\[
+\tt
+0 \trans{a} 1 \trans{b} 2 \trans{b} 3
+\]
+is an accepting path through {\tt M} for the string {\tt abb}. This means that
+the machine {\tt M} accepts this string. Note that other paths through the
+machine are possible for this string, an example being
+\[
+\tt
+0 \trans{a} 0 \trans{b} 0 \trans{b} 0
+\]
+All that is needed for the machine to accept is {\em one\/} accepting path; it
+does not affect acceptance if there are other non-accepting (or indeed
+accepting) paths. More than one accepting path can exist. Machine {\tt N}
+accepts the string {\tt ab} by both
+\[
+\tt
+0 \trans{a} 1 \trans{b} 2
+\]
+and 
+\[
+\tt
+0 \trans{a} 3 \trans{\eps} 4 \trans{b} 5
+\]
+A machine will {\em reject\/} a string only when there is no accepting path.
+Machine {\tt N} rejects the string {\tt a}, since the two paths through the
+machine labelled by {\tt a} fail to terminate in a final state:
+\[
+\tt
+0 \trans{a} 1 \;\;\;\;\;\; 0 \trans{a} 3
+\]
+Machine {\tt N} rejects the string {\tt aa}
+since there is {\em no\/} path through the machine labelled by {\tt aa}: after
+reading {\tt a} the machine can be in state {\tt 1}, {\tt 3}
+or {\tt 4}, from none
+of these can an {\tt a} move be made.
+
+\section{Simulating an NFA}
+\label{implem}
+
+As was explained in the last section, a string {\tt st} is accepted by a
+machine {\tt M} when there is at least one accepting path labelled by {\tt st}
+through {\tt M}, and is rejected by {\tt M} when no such path exists. 
+
+The key to implementation is to explore simultaneously {\em all\/} possible
+paths through the machine labelled by a particular string. Take as an informal
+example the string {\tt ab} and the machine {\tt N}. After reading no input,
+the machine can only be in state {\tt 0}. On reading an {\tt a} there are
+moves to states {\tt 1} and {\tt 3}; however this is not the whole story.
+From state
+{\tt 3} it is possible to make an \eps-move to state {\tt 4}, so after reading
+{\tt a} the machine can be in any of the states {\tt \{1,3,4\}}. 
+
+On reading a {\tt b}, we have to look for all the possible {\tt b} moves from
+each of the states {\tt \{1,3,4\}}. From {\tt 1} we can move to {\tt 2}, from
+{\tt 3} to {\tt 4} and from {\tt 4} to {\tt 5} -- no \eps-moves are possible
+from the states {\tt \{2,4,5\}}, and so the states accessible after reading
+the string {\tt ab} are {\tt \{2,4,5\}}. Is this string to be accepted by {\tt
+N}?
+We accept it exactly if the set contains a final state -- it contains both
+{\tt 2} and {\tt 5}, so it is accepted. Note that the states accessible after
+reading {\tt a} are {\tt \{1,3,4\}}; this set contains no final state, and so
+the machine {\tt N} {\em rejects\/} the string {\tt a}.
+
+There is a general pattern to this process, which consists of a repetition of
+\begin{itemize}
+\item Take a set of states, such as {\tt \{1,3,4\}}, and find the set of
+states accessible by a move on a particular symbol, e.g. {\tt b}. In this case
+it is the set {\tt \{2,4,5\}}. This is called {\tt onemove} in the module {\tt
+NfaLib}.
+\item Take a set of states, like {\tt \{1,3\}}, and find the
+set of states accessible from the states by {\em zero\/} or more \eps-moves.
+In this example, it is the set {\tt \{1,3,4\}}. This is the \eps-closure of
+the original set, and is called {\tt closure} in {\tt NfaLib}.
+\end{itemize}
+The functions {\tt onemove} and {\tt closure} are composed in the function
+{\tt onetrans}, and this function is iterated along the string by the {\tt
+trans} function of the module {\tt ImplementNfa}.
+
+\subsection*{Implementation in Haskell}
+
+We discuss the development of the function
+\begin{alltt}
+trans :: Ord a => Nfa a -> String -> Set a
+\end{alltt} 
+top-down. Iteration along a string is given by {\tt foldl}
+\begin{alltt}
+foldl :: (Set a -> Char -> Set a)
+                -> Set a -> String -> Set a
+ 
+foldl f r []     = r
+foldl f r (c:cs) = foldl f (f r c) cs
+\end{alltt}
+The first argument, {\tt f}, is the step function, taking a set and a
+character to the states accessible from the set on the character. The second
+argument, {\tt r},
+is the starting state, and the final argument is the string along
+which to iterate.
+
+How does the function operate? If given an empty string, the
+start state is the result. If given a string {\tt (c:cs)}, the function is
+called again, with the tail of the string, {\tt cs}, and with a new starting
+state, {\tt (f r c)}, which is the result of applying the step function to the
+starting set of states and the first character of the string.
+Now to develop {\tt trans}.
+\begin{alltt}
+trans mach str
+    = foldl step startset str
+      where
+      step set ch = onetrans mach ch set
+      startset = closure mach (sing (startstate mach))
+\end{alltt}
+{\tt step} is derived from {\tt onetrans} simply by suppling its machine
+argument {\tt mach}, similarly {\tt startset} is derived from the machine {\tt
+mach}, using the functions {\tt closure} and {\tt startstate}. All these
+functions are defined in the {\tt NfaLib} module. We discuss their definitions now.
+\begin{alltt}
+onetrans :: Ord a => Nfa a -> Char -> Set a -> Set a
+
+onetrans mach c x = closure mach (onemove mach c x)
+\end{alltt}
+Next, we examine {\tt onemove},
+\begin{alltt}
+onemove :: Ord a => Nfa a -> Char -> Set a -> Set a
+
+onemove (NFA states moves start term) c x
+  = makeSet [ s | t <- flatten x , 
+                  Move z d s <- flatten moves ,
+                  z==t , c==d ]
+\end{alltt}
+The essential idea here is to run through the elements {\tt t} of
+the set {\tt x} and the set of
+moves, {\tt moves} looking for all {\tt c}-moves originating at {\tt t}. For
+each of these, the result of the move, {\tt s}, goes into the resulting set.
+
+The definition uses list comprehensions, so it is necessary first to {\tt
+flatten} the sets {\tt x} and {\tt moves} into lists, and then to convert the
+list comprehension into a set by means of {\tt makeSet}.
+\begin{alltt}
+closure :: Ord a => Nfa a -> Set a -> Set a
+
+closure (NFA states moves start term)
+  = setlimit add
+    where
+    add stateset = union stateset (makeSet accessible)
+                   where
+                   accessible
+                     = [ s | x <- flatten stateset , 
+                             Emove y s <- flatten moves ,
+                             y==x ]
+\end{alltt}
+The essence of {\tt closure} is to take the limit of the function which adds
+to a set of states all those states which are accessible by a single
+\eps-move; in the limit we get a set to which no further states can be added
+by \eps-transitions. Adding the states got by single \eps-moves is accomplished by the function {\tt add} and the auxiliary
+definition {\tt accessible} which resembles the construction of {\tt
+onemove}.
+
+\section{Implementing an example}
+
+The machine {\tt P} is illustrated by
+\noindent
+\begin{center}\ \epsfig{figure=pic4.ps} \end{center}
+
+\medskip
+\noindent
+{\bf Exercise}
+
+\medskip
+\noindent
+11. Give the Haskell definition of the machine {\tt P}.
+
+\medskip
+\noindent
+The \eps-closure of the set {\tt \{0\}} is the set {\tt \{0,1,2,4\}}. 
+Looking at the definition of {\tt closure} above, the
+first application of the function {\tt add} to {\tt \{0\}} gives the set
+{\tt \{0,1\}}; applying {\tt add} to this gives {\tt \{0,1,2,4\}}. Applying
+{\tt add} to this set gives the same set, hence this is the value of {\tt
+setlimit} here. The set of states with which we start the simulation
+is therefore {\tt \{0,1,2,4\}}. Suppose the first input is {\tt a}; applying
+{\tt onemove} reveals only one {\tt a} move, from {\tt 2} to {\tt 3}. Taking
+the closure of the set {\tt \{3\}} gives the set {\tt \{1,2,3,4,6,7\}}. A
+{\tt b} move from here is only from {\tt 4} to {\tt 5}; closing under
+\eps-moves gives {\tt \{1,2,4,5,6,7\}}. An {\tt a} move from here is possible
+in two ways: from {\tt 2} to {\tt 3} and from {\tt 7} to {\tt 8}; closing up
+{\tt \{3,8\}} gives {\tt \{1,2,3,4,6,7,8\}}. Is the string {\tt aba} therefore
+accepted by {\tt P}? Yes, because {\tt 8} is a member of {\tt
+\{1,2,3,4,6,7,8\}}. This sequence can be illustrated thus
+\noindent
+\begin{center}\ \epsfig{figure=pic5.ps} \end{center}
+
+\medskip
+\noindent
+{\bf Exercise}
+
+\medskip
+\noindent
+12. Show that the string {\tt abb} is not accepted by the machine {\tt P}.
+
+\section{Building NFAs from regular expressions}
+
+For each regular expression it is possible to build an NFA which accepts
+exactly those strings matching the expression. The machines are illustrated
+in Figure \ref{buildNFA}.
+%\noindent
+%\begin{center}\ \epsfig{figure=pic3a.ps} \end{center}
+%
+%\noindent
+%\begin{center}\ \epsfig{figure=pic3b.ps} \end{center}
+\begin{figure}
+\begin{center}\ \epsfig{figure=pic3.ps, width=10cm} \end{center}
+\caption{Building NFAs for regular expressions}
+\label{buildNFA}
+\end{figure}
+
+The construction is by induction over the structure of the regular expression:
+the machines for an character and for \eps\ are given outright, and for
+complex expressions, the machines are built from the machines representing the
+parts. It is straightforward
+to justify the construction.
+\begin{description}
+\item[\tt (e|f)] Any path through {\tt M(e|f)}
+must be either a path through {\tt M(e)} or a path through {\tt M(f)} (with 
+\eps\ at the start and end.
+\item[\tt ef] Any path through {\tt M(ef)} will be a path through {\tt M(e)}
+followed by a path through {\tt M(f)}.
+\item[\tt e*] Paths through {\tt M(e*)} are of two sorts; the first is simply
+an \eps, others begin with a path through {\tt M(e)}, and continue with a path
+through {\tt M(e*)}. In other words, paths through {\tt M(e*)} go through {\tt
+M(e)} zero or more times.
+\end{description}
+The machine for the pattern {\tt (ab|ba)*} is given by
+\noindent
+\begin{center}\ \epsfig{figure=pic6.ps,width=6cm} \end{center}
+The Haskell description of the construction is given in {BuildNfa}. At
+the top level the function 
+
+\begin{alltt}
+build :: Reg -> Nfa Int
+\end{alltt} 
+does the recursion. For the base case,
+
+\begin{alltt}
+build (Literal c)
+  = NFA
+    (makeSet [0 .. 1])
+    (sing (Move 0 c 1))
+    0
+    (sing 1)
+\end{alltt}
+The definition of {\tt build Epsilon} is similar. In the other cases
+we define
+
+\begin{alltt}
+build (Or r1 r2)   = m\_or   (build r1) (build r2)
+build (Then r1 r2) = m\_then (build r1) (build r2)
+build (Star r)     = m\_star (build r)
+\end{alltt}
+in which the functions {\tt m\_or} and so on build the machines from their
+components as illustrated in Figure \ref{buildNFA}.
+
+We make certain assumptions
+about the NFAs we build. We take it that the states are numbered from {\tt 0},
+with the final state having the highest number. Putting the machines together
+will involve adding various new states and transitions, and renumbering the
+states and moves in the constituent machines. The definition
+of \texttt{m\_or} is given in Figure \ref{mor-def}, and the other functions are defined
+in a similar way. 
+The function {\tt renumber} renumbers states and {\tt renumber\_move} renumbers
+moves.
+
+
+\begin{figure}
+\begin{alltt}
+m\_or :: Nfa Int -> Nfa Int -> Nfa Int
+
+m\_or (NFA states1 moves1 start1 finish1) 
+     (NFA states2 moves2 start2 finish2)
+
+  = NFA
+    (states1' `union` states2' `union` newstates)
+    (moves1' `union` moves2' `union` newmoves)
+    0
+    (sing (m1+m2+1))
+
+    where
+    m1 = card states1
+    m2 = card states2
+    states1' = mapSet (renumber 1) states1
+    states2' = mapSet (renumber (m1+1)) states2
+    newstates = makeSet [0,(m1+m2+1)]
+    moves1'  = mapSet (renumber\_move 1) moves1
+    moves2'  = mapSet (renumber\_move (m1+1)) moves2
+    newmoves = makeSet [ Emove 0 1 , Emove 0 (m1+1) ,
+                       Emove m1 (m1+m2+1) , Emove (m1+m2) (m1+m2+1) ]
+\end{alltt}
+\caption{The definition of the function \texttt{m\_or}}
+\label{mor-def}
+\end{figure}
+
+\section{Deterministic machines}
+
+A deterministic finite automaton is an NFA which
+\begin{itemize}
+\item contains no \eps-moves, and
+\item has at most one arrow labelled with a particular symbol leaving any
+given state.
+\end{itemize}
+The effect of this is to make operation of the machine deterministic -- at any
+stage there is at most one possible move to make, and so after reading a
+sequence of characters, the machine can be in one state at most.
+
+Implementing a machine of this sort is much simpler than for an general NFA:
+we only have to keep track of a single position. Is there a general mechanism
+for finding a DFA corresponding to a regular expression? In fact, there is
+a general technique for transforming an arbitrary NFA into a DFA, and this we
+examine now.
+
+The conversion of an NFA into a DFA is based on the implementation given in
+Section \ref{implem}. The main idea there is to keep track of a {\em set\/} of 
+states, representing all the possible positions after reading a certain amount
+of input. This set itself can be thought of as a state of another machine,
+which will be {\em deterministic}: the moves from one {\em set\/} to another
+are completely deterministic.
+
+We show how the conversion works with the machine {\tt P}. The start state of
+the machine will be the closure of the set {\tt \{0\}}, that is 
+\so
+A = \{0,1,2,4\}
+\st
+Now, the construction proceeds by finding the sets accessible from {\tt A} by
+moves on {\tt a} and on {\tt b} -- all the characters in the {\em alphabet\/}
+of the machine {\tt P}. These sets are states of the new machine; we then
+repeat the construction with these new states, until no more states are
+produced by the construction.
+
+From {\tt A} on the symbol {\tt a} we can move to {\tt 3} from {\tt 2}.
+Closing  under \eps-moves we have the set {\tt \{1,2,3,4,6,7\}}, which we call
+{\tt B}
+\so
+B = \{1,2,3,4,6,7\}
+A $\trans{a}$ B
+\st
+In a similar way, from {\tt A} on {\tt b} we have 
+\so
+C = \{1,2,4,5,6,7\}
+A $\trans{b}$ C
+\st
+Our new machine so far looks like       
+
+\noindent
+\begin{center}\ \epsfig{figure=pic7a.ps} \end{center}
+
+We now have to see what is accessible from {\tt B} and {\tt C}. First {\tt B}.
+\so
+D = \{1,2,3,4,6,7,8\}
+B $\trans{a}$ D
+\st
+which is another new state. The process of generating new states must stop, as
+there is only a finite number of sets of states to choose from
+{\tt \{0,1,2,3,4,5,6,7,8\}}. What happens with a {\tt b} move from {\tt B}?
+\so
+B $\trans{b}$ C
+\st
+This gives the partial machine
+\noindent
+\begin{center}\ \epsfig{figure=pic7b.ps} \end{center}
+Similarly,
+\so
+C $\trans{a}$ D
+C $\trans{b}$ C
+D $\trans{a}$ D
+D $\trans{b}$ C
+\st
+which completes the construction of the DFA
+\noindent
+\begin{center}\ \epsfig{figure=pic7c.ps} \end{center}
+Which of the new states is final? One of these sets represents an accepting
+state exactly when it contains a final state of the original machine. For {\tt
+P} this is {\tt 8}, which is contained in the set {\tt D} only. In general
+there can be more than one accepting state for a machine. (This need not be
+true for NFAs, since we can always add a new final state to which each of the
+originals is linked by an \eps-move.)
+
+\section{Transforming NFAs to DFAs}
+
+The Haskell code to covert an NFA to a DFA is found in the module
+{\tt NfaToDfa}, and the main function is
+\begin{alltt}
+make\_deterministic :: Nfa Int -> Nfa Int
+ 
+make\_deterministic = number . make\_deter
+\end{alltt}
+A deterministic version of an NFA with numeric states is defined in two
+stages, using
+\begin{alltt}
+make\_deter :: Nfa Int -> Nfa (Set Int)
+ 
+number :: Nfa (Set Int) -> Nfa Int
+\end{alltt}
+{\tt make\_deter} does the conversion to the deterministic automaton with
+sets of numbers as states, {\tt number} replaces sets of numbers by numbers
+(rather than capital letters, as was done above). States are replaced by their
+position in a list of states -- see the file for more details.
+
+The function {\tt make\_deter} is a special case of the function
+\begin{alltt}
+deterministic :: Nfa Int -> [Char] -> Nfa (Set Int)
+ 
+make\_deter mach = deterministic mach (alphabet mach)
+\end{alltt}
+The process of adding state sets is repeated until no more sets are added.
+This is a version of taking a limit, given by the {\tt nfa\_limit} function,
+which acts as the usual limit function, except that it checks for equality 
+of NFAs as collections of sets.
+\begin{alltt}
+deterministic mach alpha 
+  = nfa_limit (addstep mach alpha) startmach
+    where
+    startmach = NFA 
+                (sing starter)
+                empty
+                starter
+                finish
+    starter = closure mach (sing start)
+    finish  
+      | (term `inter` starter) == empty     = empty		
+      | otherwise                           = sing starter	
+    (NFA sts mvs start term) = mach
+\end{alltt}
+The start machine, {\tt startmach}, consists of a single state, the
+\eps-closure of the start state of the original machine. {\tt addstep mach
+alpha} takes a partially built DFA and adds the state sets of {\tt mach}
+accessible by a single move on any of the characters in {\tt alpha}, the
+alphabet of {\tt mach}.
+\begin{alltt}
+addstep :: Nfa Int -> [Char] -> Nfa (Set Int) -> Nfa (Set Int)
+
+addstep mach alpha dfa
+  = add\_aux mach alpha dfa (flatten states)
+    where
+    (NFA states m s f) = dfa
+    add\_aux mach alpha dfa [] = dfa
+    add\_aux mach alpha dfa (st:rest)
+        \mbox{= add\_aux mach alpha (addmoves mach st alpha dfa) rest}
+\end{alltt}
+This involves iterating over the state sets in the 
+partially built DFA, which is done using {\tt addmoves}. {\tt addmoves mach x
+alpha dfa} will add to {\tt dfa} all the moves from state set {\tt x} over the
+alphabet {\tt alpha}.
+\begin{alltt}
+addmoves :: Nfa Int -> Set Int -> [Char] -> 
+            Nfa (Set Int) -> Nfa (Set Int)
+
+addmoves mach x [] dfa    = dfa
+ 
+addmoves mach x (c:r) dfa
+  = addmoves mach x r (addmove mach x c dfa)
+\end{alltt}
+In turn, {\tt
+addmoves} iterates along the alphabet, using {\tt addmove}. {\tt addmove mach
+x c dfa} will add to {\tt dfa} the moves from state set {\tt x} on character
+{\tt c}.
+\begin{alltt}
+addmove :: Nfa Int -> Set Int -> Char -> 
+           Nfa (Set Int) -> Nfa (Set Int)
+
+addmove mach x c (NFA states moves start finish)
+  = NFA states' moves' start finish'
+    where 
+    states' = states `union` (sing new)
+    moves'  = moves  `union` (sing (Move x c new))
+    finish' 
+     | empty /= (term `inter` new)    = finish `union` (sing new)	
+     | otherwise                      = finish       		
+    new = onetrans mach c x
+    (NFA s m q term) = mach
+\end{alltt}
+The new state set
+added by {\tt addmove} is defined using the {\tt onetrans} function first
+defined in the simulation of the NFA.
+
+\section{Minimising a DFA}
+
+In building a DFA, we have produced a machine which cam be implemented more
+efficiently. We might, however, have more states in the DFA than necessary.
+This section shows how we can {\em optimise\/} a DFA so that it contains the
+minimum number of states to perform its function of recognising the strings
+matching a particular regular expression.
+
+Two states {\tt m} and {\tt n} 
+in a DFA are {\em distinguishable\/} if we can find a string {\tt st} which
+reaches an accepting state from {\tt n} but not from {\tt n} (or vice versa).
+Otherwise, they can be treated as the same, because no string makes them
+behave differently --- putting it a different way, no {\em experiment\/} makes
+the two different.
+
+How can we tell when two states are different? We start by dividing the states
+into two {\em partitions}: one contains the accepting states, and the other
+the remainder, or non-accepting states. For our example, we get the partition
+
+\begin{alltt}
+I:  D
+II: A,B,C
+\end{alltt}
+Now, for each set in the partition, we check whether the elements in the set
+can be further divided. We look at how each of the states in the set behaves
+{\em relative to the previous partition}. In pictures,
+\noindent
+\begin{center}\ \epsfig{figure=pic8.ps} \end{center}
+This means that we can re-partition thus:
+
+\begin{alltt}
+I:   D
+II:  A
+III: B,C
+\end{alltt}
+We now repeat the process, and
+examine the only set which might be further subdivided, giving
+\noindent
+\begin{center}\ \epsfig{figure=pic9.ps} \end{center}
+This shows that we don't have to re-partition any further, and so that we can
+stop now, and collapse the two states {\tt B} and {\tt C} into one, thus:
+\noindent
+\begin{center}\ \epsfig{figure=pic10.ps} \end{center}
+
+\noindent
+The Haskell implementation of this process is in the module {\tt
+MinimiseDfa}.
+
+\medskip
+\noindent
+{\bf Exercises}
+
+\medskip
+\noindent
+13. For the regular expression {\tt b(ab|ba)*a}, find the corresponding NFA.
+
+\medskip
+\noindent
+14. For the NFA of question 1, find the corresponding (non-optimised) DFA.
+
+\medskip
+\noindent
+15. For the DFA of question 2, find the optimised DFA.
+
+\section{Regular definitions}
+
+A {\em regular definition\/} consists of a number of {\em named\/} regular
+expressions. We are allowed to use the defined names on the right-hand sides
+of definitions {\em after\/} the definition of the name. For example,
+
+\begin{alltt}
+alpha    -> [a-zA-Z]
+digit    -> [0-9]
+alphanum -> alpha | digit
+ident    -> alpha | alphanum*
+digits   -> digit+
+fract    -> (.digits)?
+num      -> digits fract
+\end{alltt}
+Because of the stipulation that a definition precedes the {\em use\/} of a
+name, we can expand each right-hand side to a regular expression involving no
+names.
+
+We can build machines to recognise strings from a number of regular
+expressions. Suppose we have the patterns
+
+\begin{alltt}
+p1:  a
+p2:  abb
+p3: a*b*
+\end{alltt}
+We can build the three NFAs thus:
+\noindent
+\begin{center}\ \epsfig{figure=pic11.ps} \end{center}
+and then they can be joined into a single machine, thus
+\noindent
+\begin{center}\ \epsfig{figure=pic12.ps} \end{center}
+In using the machine we look for the {\em longest\/} match against any of the
+patterns:
+
+\begin{alltt}
+     0,1,3,7,8(p3)
+a    2(p1),4,7,8(p3)
+a    7,8(p3)
+b    8(p3)
+a    -
+\end{alltt}
+In the example, the segment of {\tt aab} matches the pattern {\tt p3}.
+
+\medskip
+\noindent
+{\bf Exercises}
+
+\medskip
+\noindent
+16. Fully expand the names {\tt digits} and {\tt num} given above.
+
+\medskip
+\noindent
+17. Build a Haskell program to recognise strings according to a set of regular
+definitions, as outlined in this section.
+
+\section*{Bibliography}
+
+\noindent
+[Aho {\em et.\ al.}] Aho, A.V., Sethi, R.\ and Ullman, J.D., {\em Compilers:
+Principles, Techniques and Tools}, Addison-Wesley, Reading, MA, USA, 1986.
+
+\medskip
+\noindent
+[Thompson] Thompson, S., {\em Haskell: The Craft of Functional Programming},
+second edition,
+Addison-Wesley, 1999.
+
+
+\end{document}
