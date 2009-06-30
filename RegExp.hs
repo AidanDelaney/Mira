@@ -64,6 +64,7 @@ literals :: Reg -> [Char]
 literals Epsilon      = []
 literals (Literal ch) = [ch]
 literals (Or r1 r2)   = literals r1 ++ literals r2
+literals (And r1 r2)  = literals r1 ++ literals r2
 literals (Then r1 r2) = literals r1 ++ literals r2
 literals (Star r)     = literals r
 
