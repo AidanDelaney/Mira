@@ -18,6 +18,7 @@ module BuildNfa where
 import RegExp
 import Sets
 import NfaTypes
+import Data.List (findIndices)
 
 -------------------------------------------------------------------------- 
 --									--
@@ -48,6 +49,8 @@ build (Literal c)
 
 build (Or r1 r2) = m_or (build r1) (build r2)
 
+build (And r1 r2) = m_and (build r1) (build r2)
+
 build (Then r1 r2) = m_then (build r1) (build r2)
 
 build (Star r) = m_star (build r)
@@ -77,6 +80,24 @@ m_or (NFA states1 moves1 start1 finish1) (NFA states2 moves2 start2 finish2)
     moves2'  = mapSet (renumber_move (m1+1)) moves2
     newmoves = makeSet [ Emove 0 1 , Emove 0 (m1+1) ,
                        Emove m1 (m1+m2+1) , Emove (m1+m2) (m1+m2+1) ]
+
+m_and (NFA states1 moves1 start1 finish1) (NFA states2 moves2 start2 finish2)
+
+      = NFA
+      (makeSet [0..(length cross_list)])
+      (makeSet [Move (indexOf (s1,s2) cross_list) a1 (indexOf (sn, sm) cross_list) | Move s1 a1 sn <- moves1',  Move s2 a1 sm <- moves2'])
+      start
+      (makeSet [indexOf (f1,f2) cross_list | f1 <- finish1', f2 <- finish2'])
+      
+      where
+      states1' = (flatten states1)
+      states2' = (flatten states2)
+      cross_list = [(s1, s2) | s1 <- states1', s2 <- states2' ]
+      moves1' = (flatten moves1)
+      moves2' = (flatten moves2)
+      start =  indexOf (start1, start2) cross_list
+      finish1' = (flatten finish1)
+      finish2' = (flatten finish2)
 
 m_then :: Nfa Int -> Nfa Int -> Nfa Int
 
@@ -127,3 +148,5 @@ renumber_move k (Move s1 c s2)
 renumber_move k (Emove s1 s2)
       = Emove (renumber k s1) (renumber k s2)
 
+indexOf x xs
+      = (head . findIndices (x==)) xs  
