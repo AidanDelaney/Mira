@@ -25,7 +25,7 @@
 >         setlimit             -- Eq a => (Set a -> Set a) -> Set a -> Set a
 >         ) where
 
->	import List hiding ( union )
+>	import Data.List hiding ( union )
  
 Instance declarations for Eq and Ord					
 
