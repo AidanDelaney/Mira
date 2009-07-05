@@ -10,7 +10,7 @@ Synopsis:	A regular expression and automata library.
 Build-Type:	Simple
 
 Library
-  Build-Depends:	base, haskell98
+  Build-Depends:	base < 5
   Exposed-modules:
     BuildNfa, ImplementNfa, MinimiseDfa,
     Sets, NfaLib, NfaToDfa, NfaMisc, NfaTypes, RegExp
