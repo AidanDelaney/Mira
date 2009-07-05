@@ -84,7 +84,7 @@ m_or (NFA states1 moves1 start1 finish1) (NFA states2 moves2 start2 finish2)
 m_and (NFA states1 moves1 start1 finish1) (NFA states2 moves2 start2 finish2)
 
       = NFA
-      (makeSet [0..(length cross_list)])
+      (makeSet [0..((length cross_list)-1)])
       (makeSet [Move (indexOf (s1,s2) cross_list) a1 (indexOf (sn, sm) cross_list) | Move s1 a1 sn <- moves1',  Move s2 a1 sm <- moves2'])
       start
       (makeSet [indexOf (f1,f2) cross_list | f1 <- finish1', f2 <- finish2'])
