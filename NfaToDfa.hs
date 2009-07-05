@@ -116,10 +116,10 @@ addmove :: Nfa Int -> Set Int -> Char -> Nfa (Set Int) -> Nfa (Set Int)
 addmove mach x c (NFA states moves start finish)
   = NFA states' moves' start finish'
     where 
-    states' = states `union` (sing new)
-    moves'  = moves  `union` (sing (Move x c new))
+    states' = states `union` sing new
+    moves'  = moves  `union` sing (Move x c new)
     finish' 
-     | empty /= (term `inter` new)    = finish `union` (sing new)	
+     | empty /= (term `inter` new)    = finish `union` sing new
      | otherwise                      = finish       		
     new = onetrans mach c x
     (NFA s m q term) = mach
