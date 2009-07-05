@@ -16,7 +16,7 @@ module NfaLib where
 import RegExp
 import Sets
 import NfaTypes
-import List hiding (union)
+import Data.List hiding (union)
 
 -------------------------------------------------------------------------- 
 --									--
