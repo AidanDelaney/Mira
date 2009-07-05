@@ -178,10 +178,7 @@ addmove mach x c (NFA states moves start finish)
 nfa_limit :: Eq a => (Nfa a -> Nfa a) -> Nfa a -> Nfa a
 
 nfa_limit f n 
-  | (nfa_eq n next) = n		
+  | n == next       = n
   | otherwise       = nfa_limit f next
                 where
 	        next = f n
-		nfa_eq (NFA s1 n1 st1 f1) (NFA s2 n2 st2 f2)
-		  = s1 == s2 && n1 == n2 && st1 == st2 && f1 == f2
-
