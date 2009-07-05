@@ -22,33 +22,19 @@ import Sets
 import NfaTypes
 import NfaLib
 
--------------------------------------------------------------------------- 
---									--
---	Conversion of an nfa produced by build (above) to a dfa.	--
---	Note that a ``dead'' state is produced by the process as	--
---	implemented here.						--
---									--
---	First make a (nfa (set num)) using make_deter, and then 	--
---	convert to a numeric dfa by means of the numbering function	--
---	number.								--
---									--
--------------------------------------------------------------------------- 
-
+-- |    Conversion of an nfa produced by build to a dfa.
+--	Note that a ``dead'' state is produced by the process as
+--	implemented here.
 make_deterministic :: Nfa Int -> Nfa Int
 
+--	First make a (nfa (set num)) using make_deter, and then
+--	convert to a numeric dfa by means of the numbering functio
+--	number.
 make_deterministic = number . make_deter
 
--------------------------------------------------------------------------- 
---									--
---	number will make an (Nfa Int) from an Nfa (Set Int).		--
---									--
---	Extract a list of the states of the machine (statelist),	--
---	then replace each state by its position in the statelist, 	--
---	given by the function change. These replacements are performed	--
---	by means of the mapset operation.				--
---									--
--------------------------------------------------------------------------- 
-
+-- | 'number' @m@ extracts a list of the states from @m@ (statelist),
+--   and returns machine where each state is replaced by its position in the
+--   statelist, given by the function change
 number :: Nfa (Set Int) -> Nfa Int
 
 number (NFA states moves start finish)
@@ -69,35 +55,22 @@ number (NFA states moves start finish)
     start' = change start
     finish' = mapSet change finish
 
--------------------------------------------------------------------------- 
---									--
---	make_deter calls the crucial function 				--
---		deterministic						--
---	on a machine and its alphabet.					--
---									--
--------------------------------------------------------------------------- 
 
+-- | 'make_deter' calls the crucial function 'deterministic' on a machine and
+--   its alphabet.
 make_deter :: Nfa Int -> Nfa (Set Int)
 
 make_deter mach = deterministic mach (alphabet mach)
 
--------------------------------------------------------------------------- 
---									--
---	deterministic mach alpha					--
---									--
---	is the result of forming the dfa based on sets of states of	--
---	mach, using the alphabet alpha.					--
---									--
---	Calculated by taking the limit of the function addstep		--
---	which adds all the ststes accessible by one transition on	--
---	one of the characters of the alphabet.				--
---	The starting machine has one (start) state, the closure of the	--
---	start state of mach. Note that this may be terminal - test	--
---	for this by taking an intersection of this state set with	--
---	the set term of terminal states of mach.			--
---									--
--------------------------------------------------------------------------- 
-
+-- | 'deterministic' @mach alpha@ is the result of forming the dfa based on
+-- sets of states of @mach@, using the alphabet @alpha@.
+--
+-- Calculated by taking the limit of the function 'addstep' which adds all
+-- the states accessible by one transition on one of the characters of the
+-- alphabet. The starting machine has one (start) state, the closure of the
+-- start state of mach. Note that this may be terminal - test for this by
+-- taking an intersection of this state set with the set term of terminal
+-- states of mach.
 deterministic :: Nfa Int -> [Char] -> Nfa (Set Int)
 
 deterministic mach alpha 
@@ -114,13 +87,8 @@ deterministic mach alpha
         | otherwise                           = sing starter	
       (NFA sts mvs start term) = mach
 
--------------------------------------------------------------------------- 
---									--
---	Addstep adds all the new states which can be made by a single	--
---	transition on one of the characters of the alphabet.		--
---									--
--------------------------------------------------------------------------- 
-
+-- | 'addstep' adds all the new states which can be made by a single
+-- transition on one of the characters of the alphabet.
 addstep :: Nfa Int -> [Char] -> Nfa (Set Int) -> Nfa (Set Int)
 
 addstep mach alpha dfa
@@ -131,30 +99,18 @@ addstep mach alpha dfa
     add_aux mach alpha dfa (st:rest) 
         = add_aux mach alpha (addmoves mach st alpha dfa) rest
 
--------------------------------------------------------------------------- 
---									--
---	addmoves mach x alpha dfa					--
---									--
---	will add to dfa all the moves from state set x over alphabet 	--
---	alpha.								--
---	Defined by iterating addmove.					--
---									--
--------------------------------------------------------------------------- 
-
+-- | 'addmoves' @mach x alpha dfa@ will add to @dfa@ all the moves from
+--   state set @x@ over alphabet @alpha@.
+--
+--   Defined by iterating 'addmove'.
 addmoves :: Nfa Int -> Set Int -> [Char] -> Nfa (Set Int) -> Nfa (Set Int)
 
 addmoves mach x [] dfa    = dfa
 
 addmoves mach x (c:r) dfa = addmoves mach x r (addmove mach x c dfa)
 
--------------------------------------------------------------------------- 
---									--
---	addmove mach x c dfa						--
---									--
---	will add to dfa the moves from state set x on character c.	--
---									--
--------------------------------------------------------------------------- 
-
+-- | 'addmove' @mach x c dfa@ will add to @dfa@ the moves from state set @x@ on
+-- character @c@.
 addmove :: Nfa Int -> Set Int -> Char -> Nfa (Set Int) -> Nfa (Set Int)
 
 addmove mach x c (NFA states moves start finish)
@@ -168,13 +124,8 @@ addmove mach x c (NFA states moves start finish)
     new = onetrans mach c x
     (NFA s m q term) = mach
 
--------------------------------------------------------------------------- 
---									--
---	Finding the limit of an nfa transforming function. Just like	--
---	limit except for the change of equality test.			--
---									--
--------------------------------------------------------------------------- 
-
+-- | 'nfa_limit' finds the limit of an nfa transforming function. Just like
+-- 'limit' except for the change of equality test.
 nfa_limit :: Eq a => (Nfa a -> Nfa a) -> Nfa a -> Nfa a
 
 nfa_limit f n 
