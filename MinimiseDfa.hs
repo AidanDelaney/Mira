@@ -40,7 +40,9 @@ minimise mach = replace mini mach
 		    start' = f start
 		    finish' = mapSet f finish
 		mini a = minimum (flatten (eqclass a))
-		eqclass a = head [ b | b <-flatten classes , memSet b a ]
+		eqclass a = case [ b | b <-flatten classes , memSet b a ] of
+                            []    -> error "minimise eqclass"
+                            (x:_) -> x
 		(classes,fun) = eqclasses mach
 
 -------------------------------------------------------------------------- 
