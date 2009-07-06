@@ -54,11 +54,11 @@ instance (Ord a, Arbitrary a) => Arbitrary (Nfa a) where
    aut 0  =
      do start  <- arbitrary
         return $ NFA (Set.fromList []) (Set.fromList []) start (Set.fromList [])
-   aut sz =
-     do msz <- arbitrary
-        fsz <- elements [1..sz] -- seems hokey
+   aut msz =
+     do ssz <- elements [1..msz] -- seems hokey
+        fsz <- elements [1..msz] -- seems hokey
         --
-        states  <- vector sz
+        states  <- vector ssz
         mvs     <- replicateM msz $ move states
         start   <- elements states
         final   <- take fsz `fmap` sublist states -- subset
