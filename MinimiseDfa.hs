@@ -15,8 +15,10 @@
 
 module MinimiseDfa where
 
+import qualified Data.Set as Set
+import Data.Set ( Set, member )
+
 import RegExp
-import Sets
 import NfaTypes
 
 --------------------------------------------------------------------------
@@ -29,20 +31,20 @@ import NfaTypes
 
 minimise :: Ord a => Nfa a -> Nfa a
 
-minimise mach@(NFA states _ _ _) | card states == 0 = mach
+minimise mach@(NFA states _ _ _) | Set.null states = mach
 
 minimise mach = replace mini mach
 	        where
 		replace f (NFA states moves start finish)
 		  = NFA states' moves' start' finish'
 		    where
-		    states' = mapSet f states
-		    moves' = makeSet [ Move (f a) c (f b) |
-					Move a c b <- flatten moves ]
+		    states' = Set.map f states
+		    moves' = Set.fromList [ Move (f a) c (f b) |
+					Move a c b <- Set.toList moves ]
 		    start' = f start
-		    finish' = mapSet f finish
-		mini a = minimum (flatten (eqclass a))
-		eqclass a = case [ b | b <-flatten classes , memSet b a ] of
+		    finish' = Set.map f finish
+		mini a = minimum (Set.toList (eqclass a))
+		eqclass a = case [ b | b <- Set.toList classes , a `member` b ] of
                             []    -> error "minimise eqclass"
                             (x:_) -> x
 		(classes,fun) = eqclasses mach
@@ -63,7 +65,7 @@ minimise mach = replace mini mach
 
 partition :: Ord a => (a -> a -> Bool) -> Set a -> Set (Set a)
 
-partition f s = makeSet (map makeSet (part f (flatten s)))
+partition f s = Set.fromList (map Set.fromList (part f (Set.toList s)))
 
 -------------------------------------------------------------------------- 
 --									--
@@ -145,7 +147,7 @@ eqclasses mach
 
 	  firstpart = partition firstpartfun states
 	
-	  firstpartfun a b = ( (memSet finish a) == (memSet finish b) )
+	  firstpartfun a b = ( (a `member` finish) == (b `member` finish) )
 
 	  (NFA states moves startst finish) = mach
 
@@ -158,7 +160,7 @@ eqclasses mach
 					    (Move b' z d) <- movelist , b==b' ,
 					    y==z ]
 			&& partfun a b
-		    movelist = flatten moves
+		    movelist = Set.toList moves
 
 	  to_limit f (a,b)
 	    | (eqpart a a') = (a,b) 		
@@ -167,8 +169,11 @@ eqclasses mach
 	      next = f (a,b)
 	      (a',b') = next
 	  
-	  eqpart a a' = and ( flatten (mapSet (setmemSet a') a) ) && 
-			and ( flatten (mapSet (setmemSet a) a') )
+	  eqpart a a' = and ( Set.toList (Set.map (setmemSet a') a) ) && 
+			and ( Set.toList (Set.map (setmemSet a) a') )
 
-	  setmemSet x a = or ( flatten (mapSet (eqSet a) x) )
+	  setmemSet x a = or ( Set.toList (Set.map (== a) x) )
+
+
+
 

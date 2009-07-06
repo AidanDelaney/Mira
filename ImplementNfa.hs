@@ -17,8 +17,10 @@
 
 module ImplementNfa where
 
+import qualified Data.Set as Set
+import Data.Set ( Set, singleton )
+
 import RegExp
-import Sets
 import NfaTypes
 import NfaLib
 
@@ -38,7 +40,7 @@ trans :: Ord a => Nfa a -> String -> Set a
 trans mach str = foldl step startset str
 		 where
 		 step set ch = onetrans mach ch set
-		 startset = closure mach (sing (startstate mach))
+		 startset = closure mach (singleton (startstate mach))
 
 -------------------------------------------------------------------------- 
 --	Thanks are due to Sven Martin for pointing out the omission 	--
@@ -51,5 +53,6 @@ trans mach str = foldl step startset str
 
 print_trans :: Nfa Int -> String -> [Char]
 
-print_trans mach str = show (flatten (trans mach str))
+print_trans mach str = show (Set.toList (trans mach str))
+
 

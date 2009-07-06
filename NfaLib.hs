@@ -13,10 +13,13 @@
 
 module NfaLib where
 
+import qualified Data.Set as Set
+
+import Data.List hiding ( union )
+import Data.Set ( Set, union )
+
 import RegExp
-import Sets
 import NfaTypes
-import Data.List hiding (union)
 
 -------------------------------------------------------------------------- 
 --									--
@@ -32,12 +35,19 @@ closure :: Ord a => Nfa a -> Set a -> Set a
 closure (NFA states moves start term)
       = setlimit add
 	where
-	add stateset = union stateset (makeSet accessible)
+	add stateset = union stateset (Set.fromList accessible)
 		       where
 		       accessible
-			 = [ s | x <- flatten stateset , 
-				 Emove y s <- flatten moves ,
+			 = [ s | x <- Set.toList stateset , 
+				 Emove y s <- Set.toList moves ,
 				 y==x ]
+
+setlimit :: Eq a => (Set a -> Set a) -> Set a -> Set a
+setlimit f s
+  | s==next	= s
+  | otherwise   = setlimit f next
+    where
+    next = f s
 
 -------------------------------------------------------------------------- 
 --									--
@@ -49,8 +59,8 @@ closure (NFA states moves start term)
 onemove :: Ord a => Nfa a -> Char -> Set a -> Set a
 
 onemove (NFA states moves start term) c x
-      = makeSet [ s | t <- flatten x , 
-		      Move z d s <- flatten moves ,
+      = Set.fromList [ s | t <- Set.toList x , 
+		      Move z d s <- Set.toList moves ,
 		      z==t , c==d ]
 
 -------------------------------------------------------------------------- 
@@ -83,5 +93,6 @@ startstate (NFA states moves start finish) = start
 alphabet :: Nfa a -> [Char]
 
 alphabet (NFA s moves st f)
-  = nub [ c | Move s c t <- flatten moves ]
+  = nub [ c | Move s c t <- Set.toList moves ]
+
 

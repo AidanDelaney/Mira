@@ -17,8 +17,10 @@
 
 module NfaMisc where
 
+import qualified Data.Set as Set
+import Data.Set ( Set, union, singleton )
+
 import RegExp
-import Sets
 import NfaTypes 
 
 -------------------------------------------------------------------------- 
@@ -30,25 +32,25 @@ import NfaTypes
 machM, machN :: Nfa Int
 
 machM     = NFA
-	    (makeSet [0..3])
-	    (makeSet [ Move 0 'a' 0 ,
+	    (Set.fromList [0..3])
+	    (Set.fromList [ Move 0 'a' 0 ,
 		       Move 0 'a' 1,
 		       Move 0 'b' 0,
 		       Move 1 'b' 2,
 		       Move 2 'b' 3 ] )
 	    0
-	    (sing 3)
+	    (singleton 3)
 
 machN    = NFA
-	    (makeSet [0..5])
-	    (makeSet [ Move 0 'a' 1 ,
+	    (Set.fromList [0..5])
+	    (Set.fromList [ Move 0 'a' 1 ,
 		       Move 1 'b' 2,
 		       Move 0 'a' 3,
 		       Move 3 'b' 4,
 		       Emove 3 4,
 		       Move 4 'b' 5 ] )
 	    0
-	    (makeSet [2,5])
+	    (Set.fromList [2,5])
 
 -------------------------------------------------------------------------- 
 --									--
@@ -59,10 +61,10 @@ machN    = NFA
 print_nfa :: Nfa Int -> [Char]
 
 print_nfa (NFA states moves start finish)
-      = "States:\t" ++ show_states (flatten states) ++ "\n\n" ++
-	"Moves:\n" ++ (concat (map print_move (flatten moves))) ++ "\n\n" ++
+      = "States:\t" ++ show_states (Set.toList states) ++ "\n\n" ++
+	"Moves:\n" ++ (concat (map print_move (Set.toList moves))) ++ "\n\n" ++
 	"Start:\t" ++ show start ++ "\n\n" ++
-	"Finish:\t" ++ show_states (flatten finish) ++ "\n"
+	"Finish:\t" ++ show_states (Set.toList finish) ++ "\n"
 
 show_states :: [Int] -> [Char]
 
@@ -83,7 +85,7 @@ print_move (Emove s1 s2) = "\t" ++ show s1 ++ "\t@\t" ++ show s2 ++ "\n"
 
 print_classes :: Set (Set Int) -> [Char]
 
-print_classes ss = pcs (map flatten (flatten ss))
+print_classes ss = pcs (map Set.toList (Set.toList ss))
 		   where
 		   pcs = concat . map pc 
 		   pc  = (++"\n") .  concat . (map ((++"\t").show_int))
@@ -91,4 +93,5 @@ print_classes ss = pcs (map flatten (flatten ss))
 show_int :: Int -> [Char]
 
 show_int = show
+
 

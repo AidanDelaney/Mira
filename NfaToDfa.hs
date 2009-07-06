@@ -17,8 +17,10 @@
 
 module NfaToDfa where
 
+import qualified Data.Set as Set
+import Data.Set ( Set, empty, intersection, singleton, union )
+
 import RegExp
-import Sets
 import NfaTypes
 import NfaLib
 
@@ -40,20 +42,20 @@ number :: Nfa (Set Int) -> Nfa Int
 number (NFA states moves start finish)
   = NFA states' moves' start' finish'
     where
-    statelist = flatten states
+    statelist = Set.toList states
     lookup l a = look 0 l a
     look n [] a = error "lookup"
     look n (b:y) a 
       | (b==a)      = n			
       | otherwise   = look (n+1) y a 	
     change = lookup statelist
-    states' = mapSet change states
-    moves'  = mapSet newmove moves
+    states' = Set.map change states
+    moves'  = Set.map newmove moves
               where
               newmove (Move s c t) = Move (change s) c (change t) 
               newmove (Emove s t)  = Emove (change s) (change t)
     start' = change start
-    finish' = mapSet change finish
+    finish' = Set.map change finish
 
 
 -- | 'make_deter' calls the crucial function 'deterministic' on a machine and
@@ -77,14 +79,14 @@ deterministic mach alpha
     = nfa_limit (addstep mach alpha) startmach
       where
       startmach = NFA 
-                  (sing starter)
+                  (singleton starter)
                   empty
                   starter
                   finish
-      starter = closure mach (sing start)
+      starter = closure mach (singleton start)
       finish  
-        | (term `inter` starter) == empty     = empty		
-        | otherwise                           = sing starter	
+        | (term `intersection` starter) == empty     = empty
+        | otherwise                           = singleton starter	
       (NFA sts mvs start term) = mach
 
 -- | 'addstep' adds all the new states which can be made by a single
@@ -92,7 +94,7 @@ deterministic mach alpha
 addstep :: Nfa Int -> [Char] -> Nfa (Set Int) -> Nfa (Set Int)
 
 addstep mach alpha dfa
-  = add_aux mach alpha dfa (flatten states)
+  = add_aux mach alpha dfa (Set.toList states)
     where
     (NFA states m s f) = dfa
     add_aux mach alpha dfa [] = dfa
@@ -116,10 +118,10 @@ addmove :: Nfa Int -> Set Int -> Char -> Nfa (Set Int) -> Nfa (Set Int)
 addmove mach x c (NFA states moves start finish)
   = NFA states' moves' start finish'
     where 
-    states' = states `union` sing new
-    moves'  = moves  `union` sing (Move x c new)
+    states' = states `union` singleton new
+    moves'  = moves  `union` singleton (Move x c new)
     finish' 
-     | empty /= (term `inter` new)    = finish `union` sing new
+     | empty /= (term `intersection` new)    = finish `union` singleton new
      | otherwise                      = finish       		
     new = onetrans mach c x
     (NFA s m q term) = mach

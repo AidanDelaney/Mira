@@ -32,10 +32,11 @@
 
 module NfaTypes where
 
+import qualified Data.Set as Set
+import Data.Set ( Set, union )
+
 import Control.Monad ( ap, replicateM, filterM )
 import Test.QuickCheck (Arbitrary(..), sized, vector, oneof, elements)
-
-import Sets
 
 data Move a = Move a Char a | Emove a a
 	      deriving (Eq,Ord,Show)
@@ -48,7 +49,7 @@ instance (Ord a, Arbitrary a) => Arbitrary (Nfa a) where
   where
    aut 0  =
      do start  <- arbitrary
-        return $ NFA (makeSet []) (makeSet []) start (makeSet [])
+        return $ NFA (Set.fromList []) (Set.fromList []) start (Set.fromList [])
    aut sz =
      do msz <- arbitrary
         fsz <- elements [1..sz] -- seems hokey
@@ -57,7 +58,7 @@ instance (Ord a, Arbitrary a) => Arbitrary (Nfa a) where
         mvs     <- replicateM msz $ move states
         start   <- elements states
         final   <- take fsz `fmap` sublist states -- subset
-        return $ NFA (makeSet states) (makeSet mvs) start (makeSet final)
+        return $ NFA (Set.fromList states) (Set.fromList mvs) start (Set.fromList final)
    move sts = oneof [ Move  `fmap` elements sts `ap` arbitrary `ap` elements sts
                     , Emove `fmap` elements sts `ap` elements sts ]
    sublist = filterM (const arbitrary)
