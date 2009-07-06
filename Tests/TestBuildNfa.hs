@@ -16,25 +16,25 @@ import Test.Framework.Providers.HUnit
 import Test.HUnit
 import NfaTypes
 import BuildNfa (m_or, m_and)
-import Sets
+import qualified Data.Set as Set
 
 sigma_star_nfa = 
-	       NFA (makeSet [0]) (makeSet [Move 0 'a' 0, Move 0 'b' 0]) 0 (makeSet [0])
+	       NFA (Set.fromList [0]) (Set.fromList [Move 0 'a' 0, Move 0 'b' 0]) 0 (Set.fromList [0])
 
 a_plus_nfa = 
-	   NFA (makeSet [0,1]) (makeSet [Move 0 'a' 1, Move 1 'a' 1]) 0 (makeSet [1])
+	   NFA (Set.fromList [0,1]) (Set.fromList [Move 0 'a' 1, Move 1 'a' 1]) 0 (Set.fromList [1])
 
 a_plus_emove_nfa = 
-		 NFA (makeSet [0,1]) (makeSet [Move 0 'a' 1, Move 1 'a' 1]) 0 (makeSet [1])
+		 NFA (Set.fromList [0,1]) (Set.fromList [Move 0 'a' 1, Move 1 'a' 1]) 0 (Set.fromList [1])
 
 simple_or_result =
-		 NFA (makeSet [0..4]) (makeSet [Emove 0 1, Move 1 'a' 1, Move 1 'b' 1, Emove 1 4, Emove 0 2, Move 2 'a' 3, Move 3 'a' 3, Emove 3 4 ]) 0 (makeSet [4])
+		 NFA (Set.fromList [0..4]) (Set.fromList [Emove 0 1, Move 1 'a' 1, Move 1 'b' 1, Emove 1 4, Emove 0 2, Move 2 'a' 3, Move 3 'a' 3, Emove 3 4 ]) 0 (Set.fromList [4])
 
 simple_and_result =
-		 NFA (makeSet [0,1]) (makeSet [Move 0 'a' 1, Move 1 'a' 1]) 0 (makeSet [1])
+		 NFA (Set.fromList [0,1]) (Set.fromList [Move 0 'a' 1, Move 1 'a' 1]) 0 (Set.fromList [1])
 
 emove_and_result =
-		 NFA (makeSet [0,1]) (makeSet [Move 0 'a' 1, Move 1 'a' 1]) 0 (makeSet [1])
+		 NFA (Set.fromList [0,1]) (Set.fromList [Move 0 'a' 1, Move 1 'a' 1]) 0 (Set.fromList [1])
 
 test_simple_nfa_or = 
 	       assertEqual "" simple_or_result (m_or sigma_star_nfa  a_plus_nfa)
