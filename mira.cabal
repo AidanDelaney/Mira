@@ -11,6 +11,7 @@ Build-Type:	Simple
 
 Library
   Build-Depends:	base < 5
+                      , QuickCheck >= 2 && < 2.2
   Exposed-modules:
     BuildNfa, ImplementNfa, MinimiseDfa,
     Sets, NfaLib, NfaToDfa, NfaMisc, NfaTypes, RegExp
