@@ -18,7 +18,7 @@
 module ImplementNfa where
 
 import qualified Data.Set as Set
-import Data.Set ( Set, singleton )
+import Data.Set ( Set, singleton, isSubsetOf )
 
 import RegExp
 import NfaTypes
@@ -41,6 +41,11 @@ trans mach str = foldl step startset str
 		 where
 		 step set ch = onetrans mach ch set
 		 startset = closure mach (singleton (startstate mach))
+
+-- | 'accepts @mach str@' is @True@ if the automaton @mach@ accepts the
+--   string @str@
+accepts :: Ord a => Nfa a -> String -> Bool
+accepts mach str = trans mach str `isSubsetOf` finalstates mach
 
 -------------------------------------------------------------------------- 
 --	Thanks are due to Sven Martin for pointing out the omission 	--
