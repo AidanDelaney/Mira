@@ -41,7 +41,11 @@ import Test.QuickCheck (Arbitrary(..), sized, vector, oneof, elements)
 data Move a = Move a Char a | Emove a a
 	      deriving (Eq,Ord,Show)
 
-data Nfa a  = NFA (Set a) (Set (Move a)) a (Set a)
+data Nfa a  = NFA { states :: Set a
+                  , moves :: Set (Move a)
+                  , startstate :: a
+                  , finalstates :: Set a
+                  }
 	      deriving (Eq,Show)
 
 instance (Ord a, Arbitrary a) => Arbitrary (Nfa a) where

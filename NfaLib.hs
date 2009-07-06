@@ -58,11 +58,6 @@ onetrans :: Ord a => Nfa a -> Char -> Set a -> Set a
 
 onetrans mach c x = closure mach (onemove mach c x)
 
--- | 'startstate' extracts the start state of a machine.
-startstate :: Nfa a -> a
-
-startstate (NFA states moves start finish) = start
-
 -- | 'alphabet' returns the alphabet of the machine, by finding a list of
 --   the characters mentioned in the Moves.
 alphabet :: Nfa a -> [Char]
