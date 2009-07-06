@@ -46,6 +46,9 @@ data Nfa a  = NFA (Set a) (Set (Move a)) a (Set a)
 instance (Ord a, Arbitrary a) => Arbitrary (Nfa a) where
  arbitrary = sized aut
   where
+   aut 0  =
+     do start  <- arbitrary
+        return $ NFA (makeSet []) (makeSet []) start (makeSet [])
    aut sz =
      do msz <- arbitrary
         fsz <- elements [1..sz] -- seems hokey
