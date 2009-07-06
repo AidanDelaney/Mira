@@ -29,6 +29,8 @@ import NfaTypes
 
 minimise :: Ord a => Nfa a -> Nfa a
 
+minimise mach@(NFA states _ _ _) | card states == 0 = mach
+
 minimise mach = replace mini mach
 	        where
 		replace f (NFA states moves start finish)
