@@ -16,4 +16,4 @@ Library
   Exposed-modules:
     BuildNfa, ImplementNfa, MinimiseDfa,
     NfaLib, NfaToDfa, NfaMisc, NfaTypes, RegExp
-
+  Ghc-Options:    -Wall
