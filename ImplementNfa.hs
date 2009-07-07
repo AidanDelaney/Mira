@@ -18,7 +18,7 @@
 module ImplementNfa where
 
 import qualified Data.Set as Set
-import Data.Set ( Set, singleton, isSubsetOf )
+import Data.Set ( Set, singleton, intersection, empty )
 
 import RegExp
 import NfaTypes
@@ -45,7 +45,7 @@ trans mach str = foldl step startset str
 -- | 'accepts @mach str@' is @True@ if the automaton @mach@ accepts the
 --   string @str@
 accepts :: Ord a => Nfa a -> String -> Bool
-accepts mach str = trans mach str `isSubsetOf` finalstates mach
+accepts mach str = not (empty == (trans mach str `intersection` finalstates mach))
 
 -------------------------------------------------------------------------- 
 --	Thanks are due to Sven Martin for pointing out the omission 	--
