@@ -20,7 +20,7 @@ import qualified Data.Set as Set
 import NfaTypes
 import Data.List (elemIndex)
 import Data.Maybe (fromMaybe)
-import Data.Set (Set(..), singleton, union)
+import Data.Set (singleton, union)
 
 -------------------------------------------------------------------------- 
 --									--
@@ -65,7 +65,7 @@ build (Star r) = m_star (build r)
 
 m_or :: Nfa Int -> Nfa Int -> Nfa Int
 
-m_or (NFA states1 moves1 start1 finish1) (NFA states2 moves2 start2 finish2)
+m_or (NFA states1 moves1 _start1 _finish1) (NFA states2 moves2 _start2 _finish2)
 
   = NFA
     (states1' `union` states2' `union` newstates)
@@ -82,6 +82,8 @@ m_or (NFA states1 moves1 start1 finish1) (NFA states2 moves2 start2 finish2)
     moves2'  = Set.map (renumber_move (m1+1)) moves2
     newmoves = Set.fromList [ Emove 0 1 , Emove 0 (m1+1) ,
                        Emove m1 (m1+m2+1) , Emove (m1+m2) (m1+m2+1) ]
+
+m_and :: Nfa Int -> Nfa Int -> Nfa Int
 
 m_and (NFA states1 moves1 start1 finish1) (NFA states2 moves2 start2 finish2)
 
@@ -103,7 +105,7 @@ m_and (NFA states1 moves1 start1 finish1) (NFA states2 moves2 start2 finish2)
 
 m_then :: Nfa Int -> Nfa Int -> Nfa Int
 
-m_then (NFA states1 moves1 start1 finish1) (NFA states2 moves2 start2 finish2)
+m_then (NFA states1 moves1 start1 _finish1) (NFA states2 moves2 _start2 finish2)
 
       = NFA
         (union states1 states2')
@@ -120,17 +122,17 @@ m_then (NFA states1 moves1 start1 finish1) (NFA states2 moves2 start2 finish2)
 
 m_star :: Nfa Int -> Nfa Int 
 
-m_star (NFA states moves start finish)
+m_star (NFA myStates myMoves _start _finish)
   = NFA
     (states' `union` newstates)
     (moves' `union` newmoves)
     0
     (singleton (m+1))
     where
-    m = Set.size states
-    states' = Set.map (renumber 1) states
+    m = Set.size myStates
+    states' = Set.map (renumber 1) myStates
     newstates = Set.fromList [ 0 , m+1 ]
-    moves'  = Set.map (renumber_move 1) moves
+    moves'  = Set.map (renumber_move 1) myMoves
     newmoves = Set.fromList [ Emove 0 1 , Emove m 1 , Emove 0 (m+1) , Emove m (m+1) ]
 
 -------------------------------------------------------------------------- 
