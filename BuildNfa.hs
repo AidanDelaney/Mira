@@ -18,7 +18,8 @@ module BuildNfa where
 import RegExp
 import qualified Data.Set as Set
 import NfaTypes
-import Data.List (findIndices)
+import Data.List (elemIndex)
+import Data.Maybe (fromMaybe)
 import Data.Set (Set(..), singleton, union)
 
 -------------------------------------------------------------------------- 
@@ -149,5 +150,7 @@ renumber_move k (Move s1 c s2)
 renumber_move k (Emove s1 s2)
       = Emove (renumber k s1) (renumber k s2)
 
-indexOf x xs
-      = (head . findIndices (x==)) xs  
+indexOf :: Eq a => a -> [a] -> Int
+
+indexOf x
+      = fromMaybe (error "indexOf") . elemIndex x
