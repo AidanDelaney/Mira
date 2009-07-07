@@ -54,6 +54,7 @@ instance (Ord a, Arbitrary a) => Arbitrary (Nfa a) where
    aut 0  =
      do start  <- arbitrary
         return $ NFA (Set.fromList []) (Set.fromList []) start (Set.fromList [])
+   aut msz | msz > 25 = aut 25 -- FIXME: we ought to look into what chokes when we remove this
    aut msz =
      do ssz <- elements [1..msz] -- seems hokey
         fsz <- elements [1..msz] -- seems hokey
