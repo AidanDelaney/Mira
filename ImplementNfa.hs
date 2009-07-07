@@ -42,7 +42,7 @@ trans mach str = foldl step startset str
 		 step set ch = onetrans mach ch set
 		 startset = closure mach (singleton (startstate mach))
 
--- | 'accepts @mach str@' is @True@ if the automaton @mach@ accepts the
+-- | 'accepts' @mach str@ is @True@ if the automaton @mach@ accepts the
 --   string @str@
 accepts :: Ord a => Nfa a -> String -> Bool
 accepts mach str = not (empty == (trans mach str `intersection` finalstates mach))
