@@ -26,10 +26,10 @@ suite = testGroup "DFA minimisation"
 	  testProperty "minimise is deterministic"  prop_minimiseDeterministic ]
 
 prop_minimiseAccept :: Nfa Int -> String -> Bool
-prop_minimiseAccept nfa str = trans ((minimise . make_deterministic) nfa) str == trans nfa str
+prop_minimiseAccept nfa str = accepts ((minimise . make_deterministic) nfa) str == accepts nfa str
 
 prop_deterministicAccept :: Nfa Int -> String -> Bool
-prop_deterministicAccept nfa str = trans (make_deterministic nfa) str == trans nfa str
+prop_deterministicAccept nfa str = accepts (make_deterministic nfa) str == accepts nfa str
 
 prop_minimiseDeterministic :: Nfa Int -> Bool
 prop_minimiseDeterministic nfa = (minimise . minimise) nfa == minimise nfa
