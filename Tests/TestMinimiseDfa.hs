@@ -18,9 +18,18 @@ import Test.Framework.Providers.QuickCheck2
 import NfaTypes
 import MinimiseDfa
 import ImplementNfa
+import NfaToDfa
 
 suite = testGroup "DFA minimisation"
-          [ testProperty "minimised automaton accepts same strings"  prop_minimiseAccept ]
+          [ testProperty "minimised automaton accepts same strings"  prop_minimiseAccept,
+	  testProperty "a make_deterministic and an nfa accept the same strings" prop_deterministicAccept,
+	  testProperty "minimise is deterministic"  prop_minimiseDeterministic ]
 
 prop_minimiseAccept :: Nfa Int -> String -> Bool
-prop_minimiseAccept nfa str = trans (minimise nfa) str == trans nfa str
+prop_minimiseAccept nfa str = trans ((minimise . make_deterministic) nfa) str == trans nfa str
+
+prop_deterministicAccept :: Nfa Int -> String -> Bool
+prop_deterministicAccept nfa str = trans (make_deterministic nfa) str == trans nfa str
+
+prop_minimiseDeterministic :: Nfa Int -> Bool
+prop_minimiseDeterministic nfa = (minimise . minimise) nfa == minimise nfa
