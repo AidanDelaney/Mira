@@ -14,7 +14,7 @@ module Top where
 import BuildNfa
 import ImplementNfa
 import MinimiseDfa
-import Sets
+import Data.Set
 import NfaLib
 import NfaToDfa
 import NfaMisc
