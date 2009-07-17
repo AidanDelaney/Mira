@@ -61,19 +61,19 @@ machN    = NFA
 print_nfa :: Nfa Int -> [Char]
 
 print_nfa (NFA states moves start finish)
-      = "States:\t" ++ show_states (Set.toList states) ++ "\n\n" ++
-	"Moves:\n" ++ (concat (map print_move (Set.toList moves))) ++ "\n\n" ++
-	"Start:\t" ++ show start ++ "\n\n" ++
-	"Finish:\t" ++ show_states (Set.toList finish) ++ "\n"
+	"digraph Mira {\n" ++
+	show_states (Set.toList states) ++
+	(concat (map print_move (Set.toList moves))) ++
+	"}\n"
 
 show_states :: [Int] -> [Char]
 
-show_states = concat . (map ((++" ") . show))
+show_states = concat . (map ((++"\n") . show))
 
 print_move :: Move Int -> [Char]
 
-print_move (Move s1 c s2) = "\t" ++ show s1 ++ "\t" ++ [c] ++ "\t"
-			    ++ show s2 ++ "\n"
+print_move (Move s1 c s2) = "\t" ++ show s1 ++ "\t->" ++ "\t"
+			    ++ show s2 ++ "\t[label=" ++ [c] ++ "]\n"
 
 print_move (Emove s1 s2) = "\t" ++ show s1 ++ "\t@\t" ++ show s2 ++ "\n"
 
