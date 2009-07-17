@@ -60,7 +60,7 @@ machN    = NFA
 
 print_nfa :: Nfa Int -> [Char]
 
-print_nfa (NFA states moves start finish)
+print_nfa (NFA states moves start finish) =
 	"digraph Mira {\n" ++
 	show_states (Set.toList states) ++
 	(concat (map print_move (Set.toList moves))) ++
