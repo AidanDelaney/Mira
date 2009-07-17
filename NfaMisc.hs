@@ -64,11 +64,16 @@ print_nfa (NFA states moves start finish)
 	"digraph Mira {\n" ++
 	show_states (Set.toList states) ++
 	(concat (map print_move (Set.toList moves))) ++
+	show_final (Set.toList finish) ++
+	show start ++ "[shape=box]" ++ 
 	"}\n"
 
 show_states :: [Int] -> [Char]
 
 show_states = concat . (map ((++"\n") . show))
+
+show_final :: [Int] -> [Char]
+show_final = concat . (map ((++"[shape=doublecircle]\n") . show))
 
 print_move :: Move Int -> [Char]
 
