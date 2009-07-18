@@ -65,7 +65,7 @@ print_nfa (NFA states moves start finish) =
 	show_states (Set.toList states) ++
 	(concat (map print_move (Set.toList moves))) ++
 	show_final (Set.toList finish) ++
-	show start ++ "[shape=box]" ++ 
+	show start ++ "[shape=box]\n" ++ 
 	"}\n"
 
 show_states :: [Int] -> [Char]
@@ -77,10 +77,10 @@ show_final = concat . (map ((++"[shape=doublecircle]\n") . show))
 
 print_move :: Move Int -> [Char]
 
-print_move (Move s1 c s2) = "\t" ++ show s1 ++ "\t->" ++ "\t"
+print_move (Move s1 c s2) = "\t" ++ show s1 ++ "\t->\t"
 			    ++ show s2 ++ "\t[label=" ++ [c] ++ "]\n"
 
-print_move (Emove s1 s2) = "\t" ++ show s1 ++ "\t@\t" ++ show s2 ++ "\n"
+print_move (Emove s1 s2) = "\t" ++ show s1 ++ "\t->\t" ++ show s2 ++ "[label=\"@\"]\n"
 
 -------------------------------------------------------------------------- 
 --									--
