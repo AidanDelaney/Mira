@@ -12,6 +12,7 @@ import RegExp
 
 %token
 '@'	{ TokenEpsilon }
+Char    { TokenChar $$ }
 '*'     { TokenStar }
 '|'     { TokenOr }
 '&'     { TokenAnd }
@@ -22,6 +23,7 @@ import RegExp
 %%
 Reg :: { Reg }
 Reg : '@'	        { Epsilon }
+  | Char                { Literal $1 }
   | Reg '*'             { (Star $1) }
   | '(' Reg ')' '*'     { (Star $2) }
   | '(' Reg '|' Reg ')' { (Or $2 $4) }
@@ -30,7 +32,7 @@ Reg : '@'	        { Epsilon }
 
 {
 data Token = TokenEpsilon
-  | TokenChar
+  | TokenChar Char
   | TokenStar
   | TokenOr
   | TokenAnd
@@ -43,7 +45,7 @@ lexer [] = []
 lexer ('@':cs) = TokenEpsilon : lexer cs
 lexer (c:cs)
     | isSpace c = lexer cs
---    | isAlpha c = TokenChar c : lexer cs
+    | isAlpha c = TokenChar c : lexer cs
 lexer ('*':cs) = TokenStar : lexer cs
 lexer ('|':cs) = TokenOr : lexer cs
 lexer ('&':cs) = TokenAnd : lexer cs
