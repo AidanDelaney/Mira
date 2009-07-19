@@ -13,13 +13,13 @@
 --									--
 -------------------------------------------------------------------------- 
 
-module MinimiseDfa where
+module Language.Mira.MinimiseDfa where
 
 import qualified Data.Set as Set
 import Data.Set ( Set, member )
 
-import RegExp
-import NfaTypes
+import Language.Mira.RegExp
+import Language.Mira.NfaTypes
 
 --------------------------------------------------------------------------
 --									--

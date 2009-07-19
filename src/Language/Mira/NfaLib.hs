@@ -11,15 +11,15 @@
 --									--
 -------------------------------------------------------------------------- 
 
-module NfaLib where
+module Language.Mira.NfaLib where
 
 import qualified Data.Set as Set
 
 import Data.List hiding ( union )
 import Data.Set ( Set, union )
 
-import RegExp
-import NfaTypes
+import Language.Mira.RegExp
+import Language.Mira.NfaTypes
 
 -- | The epsilon closure of a set of states in an NFA. This is
 --   found by finding the limit of the function which adds to a

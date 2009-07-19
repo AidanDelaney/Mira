@@ -9,7 +9,7 @@
 --									--
 -------------------------------------------------------------------------- 
 
-module RegExp where
+module Language.Mira.RegExp where
 
 data Reg = Epsilon |
 	   Literal Char |

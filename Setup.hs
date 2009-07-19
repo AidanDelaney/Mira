@@ -9,4 +9,4 @@ import Distribution.Simple.LocalBuildInfo
 main = defaultMainWithHooks (simpleUserHooks {runTests = runzeTests})
 
 runzeTests:: Args -> Bool -> PackageDescription -> LocalBuildInfo -> IO ()
-runzeTests a b pd lb = system ( "runhaskell RunTests.hs") >> return()
+runzeTests a b pd lb = system ( "runhaskell src/Tests/RunTests.hs") >> return()

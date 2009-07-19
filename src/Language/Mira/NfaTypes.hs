@@ -30,7 +30,7 @@
 --									--
 -------------------------------------------------------------------------- 
 
-module NfaTypes where
+module Language.Mira.NfaTypes where
 
 import qualified Data.Set as Set
 import Data.Set ( Set, union )

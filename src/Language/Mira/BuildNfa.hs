@@ -13,11 +13,11 @@
 --									--
 -------------------------------------------------------------------------- 
 
-module BuildNfa where
+module Language.Mira.BuildNfa where
 
-import RegExp
+import Language.Mira.RegExp
 import qualified Data.Set as Set
-import NfaTypes
+import Language.Mira.NfaTypes
 import Data.List (elemIndex)
 import Data.Maybe (fromMaybe)
 import Data.Set (singleton, union)

@@ -15,13 +15,13 @@
 --									--
 -------------------------------------------------------------------------- 
 
-module NfaMisc where
+module Language.Mira.NfaMisc where
 
 import qualified Data.Set as Set
 import Data.Set ( Set, union, singleton )
 
-import RegExp
-import NfaTypes 
+import Language.Mira.RegExp
+import Language.Mira.NfaTypes 
 
 -------------------------------------------------------------------------- 
 --									--

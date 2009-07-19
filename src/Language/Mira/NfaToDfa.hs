@@ -15,14 +15,14 @@
 --									--
 -------------------------------------------------------------------------- 
 
-module NfaToDfa where
+module Language.Mira.NfaToDfa where
 
 import qualified Data.Set as Set
 import Data.Set ( Set, empty, intersection, singleton, union )
 
-import RegExp
-import NfaTypes
-import NfaLib
+import Language.Mira.RegExp
+import Language.Mira.NfaTypes
+import Language.Mira.NfaLib
 
 -- |    Conversion of an nfa produced by build to a dfa.
 --	Note that a ``dead'' state is produced by the process as

@@ -5,15 +5,27 @@ License:	BSD3
 License-File:	LICENCE
 Author:		Simon J. Thompson
 Homepage:	http://www.cs.kent.ac.uk/people/staff/sjt/craft2e/regExp.html
+Maintainer:	a.j.delaney@brighton.ac.uk
 Category:	Automata Theory
 Synopsis:	A regular expression and automata library.
 Build-Type:	Simple
+extra-source-files: src/Language/Mira/RegExpParser.y
 
 Library
   Build-Depends:	base < 5
                       , containers < 0.3
                       , QuickCheck >= 2 && < 2.2
+                      , array >= 0.2.0
+                      , happy >= 1.18
+  hs-source-dirs:     src
   Exposed-modules:
-    BuildNfa, ImplementNfa, MinimiseDfa,
-    NfaLib, NfaToDfa, NfaMisc, NfaTypes, RegExp
+    Language.Mira,
+    Language.Mira.RegExpParser,
+    Language.Mira.RegExp,
+    Language.Mira.NfaTypes,
+    Language.Mira.ImplementNfa,
+    Language.Mira.NfaLib,
+    Language.Mira.NfaMisc,
+    Language.Mira.NfaToDfa,
+    Language.Mira.MinimiseDfa
   Ghc-Options:    -Wall

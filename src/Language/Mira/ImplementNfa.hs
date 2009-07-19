@@ -15,14 +15,14 @@
 --									--
 -------------------------------------------------------------------------- 
 
-module ImplementNfa where
+module Language.Mira.ImplementNfa where
 
 import qualified Data.Set as Set
 import Data.Set ( Set, singleton, intersection, empty )
 
-import RegExp
-import NfaTypes
-import NfaLib
+import Language.Mira.RegExp
+import Language.Mira.NfaTypes
+import Language.Mira.NfaLib
 
 
 -------------------------------------------------------------------------- 

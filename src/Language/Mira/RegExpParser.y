@@ -1,10 +1,10 @@
 {
-module RegExpParser where
+module Language.Mira.RegExpParser where
 
 import Data.Char
 import System.Environment
 import Control.Monad
-import RegExp
+import Language.Mira.RegExp
 }
 %name regex
 %tokentype	{ Token }
