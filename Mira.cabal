@@ -24,6 +24,7 @@ Library
     Language.Mira.RegExp,
     Language.Mira.NfaTypes,
     Language.Mira.ImplementNfa,
+    Language.Mira.BuildNfa,
     Language.Mira.NfaLib,
     Language.Mira.NfaMisc,
     Language.Mira.NfaToDfa,

@@ -8,8 +8,8 @@ import Test.Framework.Providers.QuickCheck2
 import Test.HUnit
 import Test.QuickCheck
 
-import Tests.TestBuildNfa as TestBuildNfa
-import Tests.TestMinimiseDfa as TestMinimiseDfa
+import Language.Mira.TestBuildNfa as TestBuildNfa
+import Language.Mira.TestMinimiseDfa as TestMinimiseDfa
 
 main = defaultMain tests
 
