@@ -16,7 +16,7 @@ Library
                       , containers < 0.3
                       , QuickCheck >= 2 && < 2.2
                       , array >= 0.2.0
-                      , happy >= 1.18
+  Build-Tools:	      happy >= 1.18
   hs-source-dirs:     src
   Exposed-modules:
     Language.Mira,
