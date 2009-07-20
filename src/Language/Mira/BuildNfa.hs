@@ -16,6 +16,7 @@
 module Language.Mira.BuildNfa where
 
 import Language.Mira.RegExp
+import Language.Mira.NfaToDfa
 import qualified Data.Set as Set
 import Language.Mira.NfaTypes
 import Data.List (elemIndex)
@@ -85,8 +86,7 @@ m_or (NFA states1 moves1 _start1 _finish1) (NFA states2 moves2 _start2 _finish2)
 
 m_and :: Nfa Int -> Nfa Int -> Nfa Int
 
-m_and (NFA states1 moves1 start1 finish1) (NFA states2 moves2 start2 finish2)
-
+m_and n1 n2
       = NFA
       (Set.fromList [0..((length cross_list)-1)])
       (Set.fromList [Move (indexOf (s1,s2) cross_list) a1 (indexOf (sn, sm) cross_list) | Move s1 a1 sn <- moves1',  Move s2 a2 sm <- moves2', a1 == a2])
@@ -94,14 +94,16 @@ m_and (NFA states1 moves1 start1 finish1) (NFA states2 moves2 start2 finish2)
       (Set.fromList [indexOf (f1,f2) cross_list | f1 <- finish1', f2 <- finish2'])
       
       where
-      states1' = (Set.toList states1)
-      states2' = (Set.toList states2)
+      n1' = make_deterministic n1
+      n2' = make_deterministic n2
+      states1' = (Set.toList (states n1'))
+      states2' = (Set.toList (states n2'))
       cross_list = [(s1, s2) | s1 <- states1', s2 <- states2' ]
-      moves1' = (Set.toList moves1)
-      moves2' = (Set.toList moves2)
-      start =  indexOf (start1, start2) cross_list
-      finish1' = (Set.toList finish1)
-      finish2' = (Set.toList finish2)
+      moves1' = (Set.toList (moves n1'))
+      moves2' = (Set.toList (moves n2'))
+      start =  indexOf (startstate n1', startstate n2') cross_list
+      finish1' = (Set.toList (finalstates n1'))
+      finish2' = (Set.toList (finalstates n2'))
 
 m_then :: Nfa Int -> Nfa Int -> Nfa Int
 

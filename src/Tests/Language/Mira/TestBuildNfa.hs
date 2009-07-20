@@ -34,7 +34,7 @@ simple_and_result =
 		 NFA (Set.fromList [0,1]) (Set.fromList [Move 0 'a' 1, Move 1 'a' 1]) 0 (Set.fromList [1])
 
 emove_and_result =
-		 NFA (Set.fromList [0,1]) (Set.fromList [Move 0 'a' 1, Move 1 'a' 1]) 0 (Set.fromList [1])
+		 NFA (Set.fromList [0..3]) (Set.fromList [Move 0 'a' 3, Move 1 'a' 3, Move 1 'a' 3, Move 2 'a' 3, Move 3 'a' 3]) 0 (Set.fromList [3])
 
 test_simple_nfa_or = 
 	       assertEqual "" simple_or_result (m_or sigma_star_nfa  a_plus_nfa)
