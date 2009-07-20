@@ -12,6 +12,7 @@ import Language.Mira.RegExp
 '@'	{ TokenEpsilon }
 Char    { TokenChar $$ }
 '*'     { TokenStar }
+'~'     { TokenNot }
 '|'     { TokenOr }
 '&'     { TokenAnd }
 '.'     { TokenConcat }
@@ -24,6 +25,8 @@ Reg : '@'	        { Epsilon }
   | Char                { Literal $1 }
   | Reg '*'             { (Star $1) }
   | '(' Reg ')' '*'     { (Star $2) }
+  | '~' Reg             { (Not $2) }
+  | '~' '(' Reg ')'     { (Not $3) }
   | '(' Reg '|' Reg ')' { (Or $2 $4) }
   | '(' Reg '&' Reg ')' { (And $2 $4) }
   | '(' Reg '.' Reg ')' { (Then $2 $4) }
@@ -32,6 +35,7 @@ Reg : '@'	        { Epsilon }
 data Token = TokenEpsilon
   | TokenChar Char
   | TokenStar
+  | TokenNot
   | TokenOr
   | TokenAnd
   | TokenConcat
@@ -45,6 +49,7 @@ lexer (c:cs)
     | isSpace c = lexer cs
     | isAlpha c = TokenChar c : lexer cs
 lexer ('*':cs) = TokenStar : lexer cs
+lexer ('~':cs) = TokenNot : lexer cs
 lexer ('|':cs) = TokenOr : lexer cs
 lexer ('&':cs) = TokenAnd : lexer cs
 lexer ('.':cs) = TokenConcat : lexer cs

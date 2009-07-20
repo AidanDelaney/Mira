@@ -16,7 +16,8 @@ data Reg = Epsilon |
 	   Or Reg Reg |
 	   And Reg Reg |
 	   Then Reg Reg |
-	   Star Reg
+	   Star Reg |
+	   Not Reg
            deriving Eq
 
 -------------------------------------------------------------------------- 
@@ -85,3 +86,4 @@ printRE (Or r1 r2) = "(" ++ printRE r1 ++ "|" ++ printRE r2 ++ ")"
 printRE (And r1 r2) = "(" ++ printRE r1 ++ "&" ++ printRE r2 ++ ")"
 printRE (Then r1 r2) = "(" ++ printRE r1 ++ printRE r2 ++ ")"
 printRE (Star r) = "(" ++ printRE r ++")*"
+printRE (Not r) = "~(" ++ printRE r ++ ")"

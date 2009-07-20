@@ -58,6 +58,8 @@ build (Then r1 r2) = m_then (build r1) (build r2)
 
 build (Star r) = m_star (build r)
 
+build (Not r) = m_not (build r)
+
 -------------------------------------------------------------------------- 
 --									--
 --	Combinators for machines, called by build.			--
@@ -137,6 +139,10 @@ m_star (NFA myStates myMoves _start _finish)
     moves'  = Set.map (renumber_move 1) myMoves
     newmoves = Set.fromList [ Emove 0 1 , Emove m 1 , Emove 0 (m+1) , Emove m (m+1) ]
 
+m_not :: Nfa Int -> Nfa Int
+
+m_not (NFA states moves start finish)
+      = NFA states moves start (Set.difference states finish)
 -------------------------------------------------------------------------- 
 --	Auxilliary functions used in the definition of NFAs from	--
 --	regular expressions.						--
