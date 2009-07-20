@@ -2,8 +2,6 @@
 module Language.Mira.RegExpParser where
 
 import Data.Char
-import System.Environment
-import Control.Monad
 import Language.Mira.RegExp
 }
 %name regex
@@ -56,5 +54,4 @@ lexer (')':cs) = TokenCloseParen : lexer cs
 parseError :: [Token] -> a
 parseError _ = error "Parse error"
 
-main = liftM head getArgs >>= print . regex . lexer
 }
